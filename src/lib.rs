@@ -1,5 +1,6 @@
 //! Rust bindings for [JUCE](https://juce.com/) using [cxx](https://github.com/dtolnay/cxx).
 
+pub mod juce_audio_basics;
 pub mod juce_audio_devices;
 
 use {
@@ -356,5 +357,32 @@ pub(crate) mod juce {
         #[namespace = "cxx_juce::system_audio_volume"]
         #[rust_name = "get_gain"]
         pub fn getGain() -> f32;
+
+        #[namespace = "juce"]
+        pub type SingleThreadedIIRFilter;
+
+        #[namespace = "cxx_juce::iir_filter"]
+        #[rust_name = "create_iir_filter"]
+        pub fn createIIRFilter(coefficients: [f32; 5]) -> UniquePtr<SingleThreadedIIRFilter>;
+
+        #[namespace = "juce"]
+        #[rust_name = "process_samples"]
+        pub unsafe fn processSamples(
+            self: Pin<&mut SingleThreadedIIRFilter>,
+            samples: *mut f32,
+            num_samples: i32,
+        );
+
+        #[namespace = "cxx_juce::iir_filter"]
+        #[rust_name = "make_low_pass"]
+        pub fn makeLowPass(sample_rate: f64, frequency: f64, q: f64) -> [f32; 5];
+
+        #[namespace = "cxx_juce::iir_filter"]
+        #[rust_name = "make_high_pass"]
+        pub fn makeHighPass(sample_rate: f64, frequency: f64, q: f64) -> [f32; 5];
+
+        #[namespace = "cxx_juce::iir_filter"]
+        #[rust_name = "make_notch_filter"]
+        pub fn makeNotchFilter(sample_rate: f64, frequency: f64, q: f64) -> [f32; 5];
     }
 }
