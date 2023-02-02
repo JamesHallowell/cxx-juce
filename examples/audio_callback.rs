@@ -1,7 +1,7 @@
 use {
     cxx_juce::{
         juce_audio_devices::{
-            AudioDeviceManager, AudioIODeviceCallback, InputAudioSampleBuffer,
+            AudioDeviceManager, AudioIODevice, AudioIODeviceCallback, InputAudioSampleBuffer,
             OutputAudioSampleBuffer,
         },
         Result,
@@ -33,21 +33,23 @@ struct AudioCallback {
 }
 
 impl AudioIODeviceCallback for AudioCallback {
-    fn about_to_start(&mut self, _: usize, output_channels: usize, sample_rate: f64, _: usize) {
+    fn about_to_start(&mut self, device: &mut dyn AudioIODevice) {
         const STARTING_FREQUENCY: f64 = 1024.0;
+
+        let output_channels = device.output_channels() as usize;
 
         self.tones = successors(
             Some(ToneGenerator {
                 amplitude: 0.25,
                 frequency: STARTING_FREQUENCY,
                 phase: 0.0,
-                increment: STARTING_FREQUENCY / sample_rate,
+                increment: STARTING_FREQUENCY / device.sample_rate(),
             }),
             |prev| {
                 let frequency = prev.frequency * 2.5;
                 Some(ToneGenerator {
                     frequency,
-                    increment: frequency / sample_rate,
+                    increment: frequency / device.sample_rate(),
                     ..*prev
                 })
             },
