@@ -107,6 +107,16 @@ impl Default for AudioDeviceSetup {
     }
 }
 
+/// The number of channels to use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChannelCount {
+    /// Use the default number of channels for the device.
+    Default,
+
+    /// Use a custom number of channels.
+    Custom(i32),
+}
+
 impl AudioDeviceSetup {
     /// The name of the output device.
     pub fn output_device_name(&self) -> &str {
@@ -149,6 +159,54 @@ impl AudioDeviceSetup {
     /// The buffer size to use.
     pub fn with_buffer_size(mut self, buffer_size: usize) -> Self {
         self.0.pin_mut().set_buffer_size(buffer_size as i32);
+        self
+    }
+
+    /// The number of input channels.
+    pub fn input_channels(&self) -> ChannelCount {
+        if self.0.using_default_input_channels() {
+            ChannelCount::Default
+        } else {
+            ChannelCount::Custom(self.0.number_of_input_channels())
+        }
+    }
+
+    // Set the number of input channels.
+    pub fn with_input_channels(mut self, channels: ChannelCount) -> Self {
+        match channels {
+            ChannelCount::Default => {
+                self.0.pin_mut().use_default_input_channels(true);
+            }
+            ChannelCount::Custom(count) => {
+                self.0.pin_mut().use_default_input_channels(false);
+                self.0.pin_mut().set_number_of_input_channels(count);
+            }
+        }
+
+        self
+    }
+
+    /// The number of output channels.
+    pub fn output_channels(&self) -> ChannelCount {
+        if self.0.using_default_output_channels() {
+            ChannelCount::Default
+        } else {
+            ChannelCount::Custom(self.0.number_of_output_channels())
+        }
+    }
+
+    /// Set the number of output channels.
+    pub fn with_output_channels(mut self, channels: ChannelCount) -> Self {
+        match channels {
+            ChannelCount::Default => {
+                self.0.pin_mut().use_default_output_channels(true);
+            }
+            ChannelCount::Custom(count) => {
+                self.0.pin_mut().use_default_output_channels(false);
+                self.0.pin_mut().set_number_of_output_channels(count);
+            }
+        }
+
         self
     }
 }
@@ -258,13 +316,7 @@ impl AudioDeviceManager {
 /// This trait requires that implementors are [`Send`] because the callbacks will occur on the audio thread.
 pub trait AudioIODeviceCallback: Send {
     /// Called when the audio device is about to start.
-    fn about_to_start(
-        &mut self,
-        input_channels: usize,
-        output_channels: usize,
-        sample_rate: f64,
-        buffer_size: usize,
-    );
+    fn about_to_start(&mut self, device: &mut dyn AudioIODevice);
 
     /// Process a block of incoming and outgoing audio.
     fn process_block(
@@ -380,6 +432,12 @@ pub trait AudioIODevice {
 
     /// Close the device.
     fn close(&mut self);
+
+    /// The number of input channels.
+    fn input_channels(&self) -> i32;
+
+    /// The number of output channels.
+    fn output_channels(&self) -> i32;
 }
 
 impl AudioIODevice for *mut juce::AudioIODevice {
@@ -432,6 +490,60 @@ impl AudioIODevice for *mut juce::AudioIODevice {
             this.close();
         }
     }
+
+    fn input_channels(&self) -> i32 {
+        unsafe { self.as_ref() }
+            .map(juce::count_active_input_channels)
+            .unwrap_or_default()
+    }
+
+    fn output_channels(&self) -> i32 {
+        unsafe { self.as_ref() }
+            .map(juce::count_active_output_channels)
+            .unwrap_or_default()
+    }
+}
+
+impl AudioIODevice for Pin<&mut juce::AudioIODevice> {
+    fn name(&self) -> &str {
+        juce::get_device_name(self)
+    }
+
+    fn type_name(&self) -> &str {
+        juce::get_device_type_name(self)
+    }
+
+    fn sample_rate(&mut self) -> f64 {
+        juce::AudioIODevice::get_current_sample_rate(self.as_mut())
+    }
+
+    fn buffer_size(&mut self) -> usize {
+        juce::AudioIODevice::get_current_buffer_size_samples(self.as_mut()) as usize
+    }
+
+    fn available_sample_rates(&mut self) -> Vec<f64> {
+        juce::get_available_sample_rates(self.as_mut())
+    }
+
+    fn available_buffer_sizes(&mut self) -> Vec<usize> {
+        juce::get_available_buffer_sizes(self.as_mut())
+    }
+
+    fn open(&mut self, sample_rate: f64, buffer_size: usize) -> Result<()> {
+        juce::open(self.as_mut(), sample_rate, buffer_size)
+    }
+
+    fn close(&mut self) {
+        juce::AudioIODevice::close(self.as_mut());
+    }
+
+    fn input_channels(&self) -> i32 {
+        juce::count_active_input_channels(self)
+    }
+
+    fn output_channels(&self) -> i32 {
+        juce::count_active_output_channels(self)
+    }
 }
 
 impl AudioIODevice for cxx::UniquePtr<juce::AudioIODevice> {
@@ -482,6 +594,18 @@ impl AudioIODevice for cxx::UniquePtr<juce::AudioIODevice> {
             this.close();
         }
     }
+
+    fn input_channels(&self) -> i32 {
+        self.as_ref()
+            .map(juce::count_active_input_channels)
+            .unwrap_or_default()
+    }
+
+    fn output_channels(&self) -> i32 {
+        self.as_ref()
+            .map(juce::count_active_output_channels)
+            .unwrap_or_default()
+    }
 }
 
 pub(crate) mod ffi {
@@ -494,15 +618,7 @@ pub(crate) mod ffi {
             mut self_: Pin<&mut BoxedAudioIODeviceCallback>,
             mut device: Pin<&mut juce::AudioIODevice>,
         ) {
-            let input_channels = juce::count_active_input_channels(&device);
-            let output_channels = juce::count_active_output_channels(&device);
-
-            self_.about_to_start(
-                input_channels,
-                output_channels,
-                device.as_mut().get_current_sample_rate(),
-                device.as_mut().get_current_buffer_size_samples() as usize,
-            );
+            self_.about_to_start(&mut device.as_mut());
         }
 
         pub fn process_block(

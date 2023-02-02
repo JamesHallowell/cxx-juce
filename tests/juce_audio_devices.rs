@@ -1,5 +1,7 @@
 use cxx_juce::{
-    juce_audio_devices::{AudioDeviceManager, AudioDeviceSetup, AudioIODevice, AudioIODeviceType},
+    juce_audio_devices::{
+        AudioDeviceManager, AudioDeviceSetup, AudioIODevice, AudioIODeviceType, ChannelCount,
+    },
     Result,
 };
 
@@ -87,6 +89,14 @@ impl AudioIODevice for MockAudioDevice {
     }
 
     fn close(&mut self) {}
+
+    fn input_channels(&self) -> i32 {
+        2
+    }
+
+    fn output_channels(&self) -> i32 {
+        2
+    }
 }
 
 #[test]
@@ -159,4 +169,14 @@ fn can_create_devices() {
 
     assert_eq!(device.name(), "Microphone / Speakers");
     assert_eq!(device.type_name(), "Test");
+}
+
+#[test]
+fn can_configure_channel_count_in_audio_device_setup() {
+    let setup = AudioDeviceSetup::default()
+        .with_input_channels(ChannelCount::Custom(4))
+        .with_output_channels(ChannelCount::Default);
+
+    assert_eq!(setup.input_channels(), ChannelCount::Custom(4));
+    assert_eq!(setup.output_channels(), ChannelCount::Default);
 }

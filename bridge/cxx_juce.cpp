@@ -162,7 +162,9 @@ void AudioDeviceManager::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> a
                                    double sampleRate,
                                    int bufferSize) override
                 {
-                    const auto result = ::audio_io_device::open (*_device, sampleRate, static_cast<size_t> (bufferSize));
+                    const auto result = ::audio_io_device::open (*_device,
+                                                                 sampleRate,
+                                                                 static_cast<size_t> (bufferSize));
                     return static_cast<std::string> (result);
                 }
 

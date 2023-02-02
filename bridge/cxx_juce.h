@@ -106,6 +106,48 @@ struct AudioDeviceSetup
         _audioDeviceSetup.bufferSize = bufferSize;
     }
 
+    [[nodiscard]] rust::i32 numberOfInputChannels() const
+    {
+        return _audioDeviceSetup.inputChannels.countNumberOfSetBits();
+    }
+
+    void setNumberOfInputChannels (rust::i32 numberOfInputChannels)
+    {
+        _audioDeviceSetup.inputChannels.clear();
+        _audioDeviceSetup.inputChannels.setRange (0, numberOfInputChannels, true);
+    }
+
+    void useDefaultInputChannels (bool useDefaultInputChannels)
+    {
+        _audioDeviceSetup.useDefaultInputChannels = useDefaultInputChannels;
+    }
+
+    [[nodiscard]] bool usingDefaultInputChannels() const
+    {
+        return _audioDeviceSetup.useDefaultInputChannels;
+    }
+
+    [[nodiscard]] rust::i32 numberOfOutputChannels() const
+    {
+        return _audioDeviceSetup.outputChannels.countNumberOfSetBits();
+    }
+
+    void setNumberOfOutputChannels (rust::i32 numberOfOutputChannels)
+    {
+        _audioDeviceSetup.outputChannels.clear();
+        _audioDeviceSetup.outputChannels.setRange (0, numberOfOutputChannels, true);
+    }
+
+    void useDefaultOutputChannels (bool useDefaultOutputChannels)
+    {
+        _audioDeviceSetup.useDefaultOutputChannels = useDefaultOutputChannels;
+    }
+
+    [[nodiscard]] bool usingDefaultOutputChannels() const
+    {
+        return _audioDeviceSetup.useDefaultOutputChannels;
+    }
+
     juce::AudioDeviceManager::AudioDeviceSetup _audioDeviceSetup;
 };
 
@@ -280,14 +322,14 @@ namespace audio_io_device
                             static_cast<int> (bufferSize));
     }
 
-    rust::usize countActiveInputChannels (const juce::AudioIODevice& audioIoDevice)
+    rust::i32 countActiveInputChannels (const juce::AudioIODevice& audioIoDevice)
     {
-        return static_cast<rust::usize> (audioIoDevice.getActiveInputChannels().countNumberOfSetBits());
+        return audioIoDevice.getActiveInputChannels().countNumberOfSetBits();
     }
 
-    rust::usize countActiveOutputChannels (const juce::AudioIODevice& audioIoDevice)
+    rust::i32 countActiveOutputChannels (const juce::AudioIODevice& audioIoDevice)
     {
-        return static_cast<rust::usize> (audioIoDevice.getActiveOutputChannels().countNumberOfSetBits());
+        return audioIoDevice.getActiveOutputChannels().countNumberOfSetBits();
     }
 } // namespace audio_io_device
 

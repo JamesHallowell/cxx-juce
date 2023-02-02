@@ -205,6 +205,36 @@ pub(crate) mod juce {
         #[rust_name = "set_buffer_size"]
         pub fn setBufferSize(self: Pin<&mut AudioDeviceSetup>, buffer_size: i32);
 
+        #[rust_name = "number_of_input_channels"]
+        pub fn numberOfInputChannels(self: &AudioDeviceSetup) -> i32;
+
+        #[rust_name = "set_number_of_input_channels"]
+        pub fn setNumberOfInputChannels(
+            self: Pin<&mut AudioDeviceSetup>,
+            number_of_input_channels: i32,
+        );
+
+        #[rust_name = "use_default_input_channels"]
+        pub fn useDefaultInputChannels(self: Pin<&mut AudioDeviceSetup>, use_default: bool);
+
+        #[rust_name = "using_default_input_channels"]
+        pub fn usingDefaultInputChannels(self: &AudioDeviceSetup) -> bool;
+
+        #[rust_name = "number_of_output_channels"]
+        pub fn numberOfOutputChannels(self: &AudioDeviceSetup) -> i32;
+
+        #[rust_name = "set_number_of_output_channels"]
+        pub fn setNumberOfOutputChannels(
+            self: Pin<&mut AudioDeviceSetup>,
+            number_of_output_channels: i32,
+        );
+
+        #[rust_name = "use_default_output_channels"]
+        pub fn useDefaultOutputChannels(self: Pin<&mut AudioDeviceSetup>, use_default: bool);
+
+        #[rust_name = "using_default_output_channels"]
+        pub fn usingDefaultOutputChannels(self: &AudioDeviceSetup) -> bool;
+
         pub type AudioDeviceManager;
 
         #[rust_name = "create_audio_device_manager"]
@@ -290,11 +320,11 @@ pub(crate) mod juce {
 
         #[namespace = "cxx_juce::audio_io_device"]
         #[rust_name = "count_active_input_channels"]
-        pub fn countActiveInputChannels(self_: &AudioIODevice) -> usize;
+        pub fn countActiveInputChannels(self_: &AudioIODevice) -> i32;
 
         #[namespace = "cxx_juce::audio_io_device"]
         #[rust_name = "count_active_output_channels"]
-        pub fn countActiveOutputChannels(self_: &AudioIODevice) -> usize;
+        pub fn countActiveOutputChannels(self_: &AudioIODevice) -> i32;
 
         #[namespace = "juce"]
         pub type AudioIODeviceType;
