@@ -101,6 +101,8 @@ impl IndexMut<usize> for OutputAudioSampleBuffer<'_> {
 /// The properties of an audio device.
 pub struct AudioDeviceSetup(cxx::UniquePtr<juce::AudioDeviceSetup>);
 
+unsafe impl Send for AudioDeviceSetup {}
+
 impl Default for AudioDeviceSetup {
     fn default() -> Self {
         Self(juce::create_audio_device_setup())
@@ -116,6 +118,8 @@ pub enum ChannelCount {
     /// Use a custom number of channels.
     Custom(i32),
 }
+
+unsafe impl Send for ChannelCount {}
 
 impl AudioDeviceSetup {
     /// The name of the output device.
@@ -216,6 +220,8 @@ pub struct AudioDeviceManager {
     device_manager: cxx::UniquePtr<juce::AudioDeviceManager>,
     _juce: JUCE,
 }
+
+unsafe impl Send for AudioDeviceManager {}
 
 impl Default for AudioDeviceManager {
     fn default() -> Self {
