@@ -274,13 +274,23 @@ impl AudioDeviceManager {
     }
 
     /// Get the current device type.
-    pub fn current_device_type(&self) -> impl AudioIODeviceType + '_ {
-        self.device_manager.get_current_device_type_object()
+    pub fn current_device_type(&self) -> Option<impl AudioIODeviceType + '_> {
+        let device_type = self.device_manager.get_current_device_type_object();
+        if !device_type.is_null() {
+            Some(device_type)
+        } else {
+            None
+        }
     }
 
     /// Get the current [`AudioIODevice`].
-    pub fn current_device(&self) -> impl AudioIODevice + '_ {
-        self.device_manager.get_current_audio_device()
+    pub fn current_device(&self) -> Option<impl AudioIODevice + '_> {
+        let current_device = self.device_manager.get_current_audio_device();
+        if !current_device.is_null() {
+            Some(current_device)
+        } else {
+            None
+        }
     }
 
     /// Registers an audio callback.

@@ -11,7 +11,7 @@ fn main() -> Result<()> {
     audio_device_manager.initialise(0, 2)?;
 
     {
-        let mut device = audio_device_manager.current_device();
+        let mut device = audio_device_manager.current_device().unwrap();
 
         println!("Name: {}", device.name());
         println!("Type: {}", device.type_name());

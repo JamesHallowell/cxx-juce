@@ -105,7 +105,7 @@ fn can_query_audio_device_types() {
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
     audio_device_manager.set_current_audio_device_type("Test");
 
-    let mut device_type = audio_device_manager.current_device_type();
+    let mut device_type = audio_device_manager.current_device_type().unwrap();
 
     assert_eq!(device_type.name(), "Test");
 
@@ -135,6 +135,7 @@ fn can_configure_audio_device_setup() {
     audio_device_manager.set_current_audio_device_type("Test");
     audio_device_manager
         .current_device_type()
+        .unwrap()
         .scan_for_devices();
 
     let setup = AudioDeviceSetup::default()
@@ -160,10 +161,12 @@ fn can_create_devices() {
     audio_device_manager.set_current_audio_device_type("Test");
     audio_device_manager
         .current_device_type()
+        .unwrap()
         .scan_for_devices();
 
     let device = audio_device_manager
         .current_device_type()
+        .unwrap()
         .create_device("Microphone", "Speakers")
         .expect("failed to create device");
 
