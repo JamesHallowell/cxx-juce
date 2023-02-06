@@ -1,6 +1,9 @@
 //! Classes for audio buffer manipulation, midi message handling, synthesis, etc.
 
-use {crate::juce, cxx::UniquePtr};
+use {
+    std::f64::consts::FRAC_1_SQRT_2,
+    {crate::juce, cxx::UniquePtr},
+};
 
 /// An infinite impulse response (IIR) filter.
 pub struct IIRFilter(UniquePtr<juce::SingleThreadedIIRFilter>);
@@ -13,7 +16,7 @@ pub struct Q(pub f64);
 
 impl Default for Q {
     fn default() -> Self {
-        Self(1.0 / 2_f64.sqrt())
+        Self(FRAC_1_SQRT_2)
     }
 }
 
