@@ -35,7 +35,7 @@ impl JUCE {
         let mut count = JUCE_REF_COUNT.lock().unwrap();
 
         if *count == 0 {
-            juce::initialise();
+            juce::initialise_juce();
 
             #[cfg(target_os = "macos")]
             juce::initialise_ns_application();
@@ -52,7 +52,7 @@ impl Drop for JUCE {
 
         *count -= 1;
         if *count == 0 {
-            juce::shutdown();
+            juce::shutdown_juce();
         }
     }
 }
@@ -155,13 +155,11 @@ pub(crate) mod juce {
         #[rust_name = "version"]
         pub fn juceVersion() -> String;
 
-        #[namespace = "juce"]
-        #[rust_name = "initialise"]
-        pub fn initialiseJuce_GUI();
+        #[rust_name = "initialise_juce"]
+        pub fn initialiseJuce();
 
-        #[namespace = "juce"]
-        #[rust_name = "shutdown"]
-        pub fn shutdownJuce_GUI();
+        #[rust_name = "shutdown_juce"]
+        pub fn shutdownJuce();
 
         #[cfg(target_os = "macos")]
         #[namespace = "juce"]
