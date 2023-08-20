@@ -1,10 +1,11 @@
 use cxx_juce::{
     juce_audio_devices::{AudioDeviceManager, AudioIODeviceType},
-    Result,
+    Result, JUCE,
 };
 
 fn main() -> Result<()> {
-    let mut audio_device_manager = AudioDeviceManager::new();
+    let juce = JUCE::initialise();
+    let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.initialise(2, 2)?;
 
     let device_type = audio_device_manager.current_device_type().unwrap();

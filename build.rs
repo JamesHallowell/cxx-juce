@@ -3,11 +3,10 @@ use std::{env, path::Path};
 fn main() {
     let _ = cxx_build::bridge("src/lib.rs");
 
-    let out_dir = env::var("OUT_DIR").unwrap();
-
     let mut cmake = cmake::Config::new("bridge");
     cmake.build_target("cxx-juce");
 
+    let out_dir = env::var("OUT_DIR").unwrap();
     cmake.define("CXX_JUCE_BINDINGS_DIR", format!("{out_dir}/cxxbridge"));
 
     if cfg!(feature = "asio") {
@@ -33,9 +32,7 @@ fn main() {
     let destination = cmake.build();
 
     println!("cargo:rerun-if-changed=src/lib.rs");
-    println!("cargo:rerun-if-changed=bridge/CMakelists.txt");
-    println!("cargo:rerun-if-changed=bridge/cxx_juce.h");
-    println!("cargo:rerun-if-changed=bridge/cxx_juce.cpp");
+    println!("cargo:rerun-if-changed=bridge");
     println!("cargo:rerun-if-env-changed=CXX_JUCE_ASIO_SDK_DIR");
 
     println!(

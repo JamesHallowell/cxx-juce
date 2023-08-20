@@ -11,8 +11,8 @@ documentation = "https://docs.rs/cxx-juce"
 asio = []
 
 [dependencies]
-cxx = "1.0.82"
+cxx = "1.0.106"
 
 [build-dependencies]
-cmake = "0.1.49"
-cxx-build = "1.0.82"
+cmake = "0.1.50"
+cxx-build = "1.0.106"

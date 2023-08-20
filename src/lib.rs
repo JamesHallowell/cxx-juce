@@ -17,7 +17,7 @@ use {
         },
         BoxedAudioIODevice, BoxedAudioIODeviceCallback, BoxedAudioIODeviceType,
     },
-    std::sync::Mutex,
+    std::sync::{Mutex, MutexGuard},
 };
 
 /// Returns the version of the JUCE library.
@@ -25,35 +25,36 @@ pub fn juce_version() -> String {
     juce::version()
 }
 
+/// An RAII guard for JUCE. Required for certain JUCE classes.
 #[must_use]
-struct JUCE;
+pub struct JUCE<'juce>(MutexGuard<'juce, ()>);
 
-static JUCE_REF_COUNT: Mutex<usize> = Mutex::new(0);
+static JUCE_INSTANCE: Mutex<()> = Mutex::new(());
 
-impl JUCE {
-    fn initialise() -> Self {
-        let mut count = JUCE_REF_COUNT.lock().unwrap();
+impl<'juce> JUCE<'juce> {
+    /// Initialise JUCE. Panics if JUCE is already initialised.
+    pub fn initialise() -> Self {
+        Self::new(JUCE_INSTANCE.try_lock().expect("JUCE already initialised"))
+    }
 
-        if *count == 0 {
-            juce::initialise_juce();
+    #[doc(hidden)]
+    pub fn wait_to_initialise_in_test_context() -> Self {
+        Self::new(JUCE_INSTANCE.lock().unwrap())
+    }
 
-            #[cfg(target_os = "macos")]
-            juce::initialise_ns_application();
-        }
-        *count += 1;
+    fn new(guard: MutexGuard<'juce, ()>) -> Self {
+        juce::initialise_juce();
 
-        Self
+        #[cfg(target_os = "macos")]
+        juce::initialise_ns_application();
+
+        Self(guard)
     }
 }
 
-impl Drop for JUCE {
+impl Drop for JUCE<'_> {
     fn drop(&mut self) {
-        let mut count = JUCE_REF_COUNT.lock().unwrap();
-
-        *count -= 1;
-        if *count == 0 {
-            juce::shutdown_juce();
-        }
+        juce::shutdown_juce();
     }
 }
 
@@ -165,6 +166,9 @@ pub(crate) mod juce {
         #[namespace = "juce"]
         #[rust_name = "initialise_ns_application"]
         pub fn initialiseNSApplication();
+
+        #[namespace = "juce"]
+        pub type MessageManager;
 
         #[namespace = "juce"]
         pub type AudioIODeviceTypeArray;

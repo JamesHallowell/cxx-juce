@@ -8,7 +8,7 @@ set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
 
 include(FetchContent)
 
-set(CXX_JUCE_VERSION_OF_JUCE 7.0.5)
+set(CXX_JUCE_VERSION_OF_JUCE 7.0.6)
 
 FetchContent_Declare(
     JUCE
@@ -19,9 +19,7 @@ FetchContent_Declare(
 message(STATUS "Fetching JUCE ${CXX_JUCE_VERSION_OF_JUCE}...")
 FetchContent_MakeAvailable(JUCE)
 
-add_library(cxx-juce STATIC
-    cxx_juce.cpp
-)
+add_library(cxx-juce STATIC)
 
 _juce_initialise_target(cxx-juce)
 
@@ -34,9 +32,23 @@ message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
 
 target_include_directories(cxx-juce
     PRIVATE
-        ${CXX_JUCE_BINDINGS_DIR}/include
         ${CXX_JUCE_BINDINGS_DIR}/crate
+        ${CXX_JUCE_BINDINGS_DIR}/include
         ${CXX_JUCE_BINDINGS_DIR}/sources
+)
+
+target_sources(cxx-juce
+    PRIVATE
+        cxx_juce.cpp
+        cxx_juce_audio_callback_handle.cpp
+        cxx_juce_bindings.cpp
+        cxx_juce_audio_device_setup.cpp
+        cxx_juce_audio_device_manager.cpp
+        cxx_juce_system_audio_volume.cpp
+        cxx_juce_audio_io_device_type.cpp
+        cxx_juce_audio_io_device.cpp
+        cxx_juce_audio_basics.cpp
+        cxx_juce_message_manager.cpp
 )
 
 target_link_libraries(cxx-juce

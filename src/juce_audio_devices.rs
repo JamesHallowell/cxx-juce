@@ -3,6 +3,7 @@
 use {
     crate::{juce, Result, JUCE},
     std::{
+        marker::PhantomData,
         ops::{Index, IndexMut},
         pin::Pin,
     },
@@ -216,27 +217,17 @@ impl AudioDeviceSetup {
 }
 
 /// Manages the state of an audio device.
-pub struct AudioDeviceManager {
+pub struct AudioDeviceManager<'juce> {
     device_manager: cxx::UniquePtr<juce::AudioDeviceManager>,
-    _juce: JUCE,
+    _juce: PhantomData<&'juce ()>,
 }
 
-unsafe impl Send for AudioDeviceManager {}
-
-impl Default for AudioDeviceManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl AudioDeviceManager {
+impl<'juce> AudioDeviceManager<'juce> {
     /// Create a new [`AudioDeviceManager`].
-    pub fn new() -> Self {
-        let juce = JUCE::initialise();
-
+    pub fn new(_juce: &'juce JUCE) -> Self {
         Self {
             device_manager: juce::create_audio_device_manager(),
-            _juce: juce,
+            _juce: PhantomData::default(),
         }
     }
 
