@@ -28,6 +28,11 @@ target_compile_features(cxx-juce
         cxx_std_17
 )
 
+target_compile_definitions(cxx-juce
+    PUBLIC
+        JUCE_USE_CURL=0
+)
+
 message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
 
 target_include_directories(cxx-juce
