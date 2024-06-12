@@ -23,7 +23,9 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
-          sudo apt install libasound2-dev libjack-jackd2-dev
+          sudo apt install \
+            libasound2-dev libjack-jackd2-dev \
+            libx11-dev libxcomposite-dev libxcursor-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
       - name: Build
         run: cargo build --verbose
       - name: Run tests
