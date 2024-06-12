@@ -57,4 +57,9 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=shell32");
         println!("cargo:rustc-link-lib=dylib=ole32");
     }
+
+    if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-lib=asound");
+        println!("cargo:rustc-link-lib=jack");
+    }
 }
