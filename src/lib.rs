@@ -27,7 +27,9 @@ pub fn juce_version() -> String {
 
 /// An RAII guard for JUCE. Required for certain JUCE classes.
 #[must_use]
-pub struct JUCE<'juce>(MutexGuard<'juce, ()>);
+pub struct JUCE<'juce> {
+    _guard: MutexGuard<'juce, ()>,
+}
 
 static JUCE_INSTANCE: Mutex<()> = Mutex::new(());
 
@@ -48,7 +50,7 @@ impl<'juce> JUCE<'juce> {
         #[cfg(target_os = "macos")]
         juce::initialise_ns_application();
 
-        Self(guard)
+        Self { _guard: guard }
     }
 }
 
@@ -166,9 +168,6 @@ pub(crate) mod juce {
         #[namespace = "juce"]
         #[rust_name = "initialise_ns_application"]
         pub fn initialiseNSApplication();
-
-        #[namespace = "juce"]
-        pub type MessageManager;
 
         #[namespace = "juce"]
         pub type AudioIODeviceTypeArray;
