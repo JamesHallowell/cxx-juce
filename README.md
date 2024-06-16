@@ -23,7 +23,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cxx-juce = "0.4"
+cxx-juce = "0.7"
 ```
 
 ## Dependencies
