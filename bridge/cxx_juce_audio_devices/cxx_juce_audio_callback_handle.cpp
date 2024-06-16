@@ -1,4 +1,4 @@
-#include "cxx_juce_bindings.h"
+#include <cxx_juce_bindings.h>
 
 namespace cxx_juce
 {
@@ -38,9 +38,9 @@ void AudioCallbackHandle::audioDeviceIOCallbackWithContext (
                                        numSamples);
     }
 
-    ::audio_io_device_callback::processBlock (*_callback,
-                                              inputBuffer,
-                                              outputBuffer);
+    audio_io_device_callback::processBlock (*_callback,
+                                            inputBuffer,
+                                            outputBuffer);
 }
 
 void AudioCallbackHandle::audioDeviceAboutToStart (juce::AudioIODevice* device)
@@ -50,12 +50,12 @@ void AudioCallbackHandle::audioDeviceAboutToStart (juce::AudioIODevice* device)
         return;
     }
 
-    ::audio_io_device_callback::aboutToStart (*_callback,
-                                              *device);
+    audio_io_device_callback::aboutToStart (*_callback,
+                                            *device);
 }
 
 void AudioCallbackHandle::audioDeviceStopped()
 {
-    ::audio_io_device_callback::stopped (*_callback);
+    audio_io_device_callback::stopped (*_callback);
 }
 } // namespace cxx_juce

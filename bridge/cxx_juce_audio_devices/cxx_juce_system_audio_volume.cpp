@@ -1,4 +1,4 @@
-#include "cxx_juce_bindings.h"
+#include <cxx_juce_bindings.h>
 
 namespace cxx_juce::system_audio_volume
 {
