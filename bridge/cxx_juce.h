@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cxx_juce_audio_basics/cxx_juce_iir_filter.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_callback_handle.h"
+#include "cxx_juce_audio_devices/cxx_juce_audio_callback_wrapper.h"
 #include "cxx_juce_audio_devices/cxx_juce_audio_device_manager.h"
 #include "cxx_juce_audio_devices/cxx_juce_audio_device_setup.h"
 #include "cxx_juce_audio_devices/cxx_juce_audio_io_device.h"

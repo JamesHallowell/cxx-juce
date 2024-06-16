@@ -2,6 +2,7 @@
 
 use {
     crate::{juce, Result, JUCE},
+    slotmap::SlotMap,
     std::{
         marker::PhantomData,
         ops::{Index, IndexMut},
@@ -216,9 +217,14 @@ impl AudioDeviceSetup {
     }
 }
 
+slotmap::new_key_type! {
+    struct AudioCallbackKey;
+}
+
 /// Manages the state of an audio device.
 pub struct AudioDeviceManager<'juce> {
     device_manager: cxx::UniquePtr<juce::AudioDeviceManager>,
+    callbacks: SlotMap<AudioCallbackKey, cxx::UniquePtr<juce::AudioCallbackWrapper>>,
     _juce: PhantomData<&'juce ()>,
 }
 
@@ -227,6 +233,7 @@ impl<'juce> AudioDeviceManager<'juce> {
     pub fn new(_juce: &'juce JUCE) -> Self {
         Self {
             device_manager: juce::create_audio_device_manager(),
+            callbacks: SlotMap::with_key(),
             _juce: PhantomData,
         }
     }
@@ -285,19 +292,25 @@ impl<'juce> AudioDeviceManager<'juce> {
     }
 
     /// Registers an audio callback.
-    ///
-    /// When the returned [`AudioCallbackHandle`] is dropped the callback is removed.
     pub fn add_audio_callback(
         &mut self,
         callback: impl AudioIODeviceCallback + 'static,
-    ) -> AudioCallbackHandle<'_> {
+    ) -> AudioCallbackHandle {
         let callback = Box::new(callback);
+        let callback = juce::wrap_audio_callback(Box::new(callback));
 
-        AudioCallbackHandle {
-            _handle: self
-                .device_manager
+        self.device_manager.pin_mut().add_audio_callback(&callback);
+        let key = self.callbacks.insert(callback);
+
+        AudioCallbackHandle { key }
+    }
+
+    /// Removes an audio callback.
+    pub fn remove_audio_callback(&mut self, handle: AudioCallbackHandle) {
+        if let Some(callback) = self.callbacks.remove(handle.key) {
+            self.device_manager
                 .pin_mut()
-                .add_audio_callback(Box::new(callback)),
+                .remove_audio_callback(&callback);
         }
     }
 
@@ -342,11 +355,9 @@ pub(crate) type BoxedAudioIODeviceType = Box<dyn AudioIODeviceType>;
 pub(crate) type BoxedAudioIODevice = Box<dyn AudioIODevice>;
 
 /// A handle to a registered audio callback.
-///
-/// When this handle is dropped the callback is removed.
 #[must_use]
-pub struct AudioCallbackHandle<'a> {
-    _handle: cxx::UniquePtr<juce::AudioCallbackHandle<'a>>,
+pub struct AudioCallbackHandle {
+    key: AudioCallbackKey,
 }
 
 /// A trait representing a type of audio driver (e.g. CoreAudio, ASIO, etc.).

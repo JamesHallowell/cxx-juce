@@ -51,8 +51,8 @@ target_sources(cxx-juce
         cxx_juce_bindings.cpp
         cxx_juce_audio_basics/cxx_juce_iir_filter.h
         cxx_juce_audio_basics/cxx_juce_iir_filter.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_callback_handle.h
-        cxx_juce_audio_devices/cxx_juce_audio_callback_handle.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_callback_wrapper.h
+        cxx_juce_audio_devices/cxx_juce_audio_callback_wrapper.cpp
         cxx_juce_audio_devices/cxx_juce_audio_device_setup.h
         cxx_juce_audio_devices/cxx_juce_audio_device_setup.cpp
         cxx_juce_audio_devices/cxx_juce_audio_device_manager.h
