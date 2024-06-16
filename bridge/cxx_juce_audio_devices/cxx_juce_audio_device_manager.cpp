@@ -1,4 +1,4 @@
-#include "cxx_juce_bindings.h"
+#include <cxx_juce_bindings.h>
 
 namespace cxx_juce
 {
@@ -34,7 +34,7 @@ void AudioDeviceManager::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> a
     {
         explicit RustAudioIODeviceType (rust::Box<BoxedAudioIODeviceType> audioIODeviceType)
             : juce::AudioIODeviceType (
-                static_cast<std::string> (::audio_io_device_type::name (*audioIODeviceType)))
+                  static_cast<std::string> (::audio_io_device_type::name (*audioIODeviceType)))
             , _audioIODeviceType (std::move (audioIODeviceType))
         {
         }
@@ -79,8 +79,8 @@ void AudioDeviceManager::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> a
             {
                 explicit RustAudioIODevice (BoxedAudioIODevice* device)
                     : juce::AudioIODevice (
-                        static_cast<std::string> (::audio_io_device::deviceName (*device)),
-                        static_cast<std::string> (::audio_io_device::typeName (*device)))
+                          static_cast<std::string> (::audio_io_device::deviceName (*device)),
+                          static_cast<std::string> (::audio_io_device::typeName (*device)))
                     , _device (device)
                 {
                 }

@@ -1,4 +1,4 @@
-#include "cxx_juce_bindings.h"
+#include "cxx_juce_iir_filter.h"
 
 namespace cxx_juce::iir_filter
 {

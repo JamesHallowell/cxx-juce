@@ -37,6 +37,7 @@ message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
 
 target_include_directories(cxx-juce
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CXX_JUCE_BINDINGS_DIR}/crate
         ${CXX_JUCE_BINDINGS_DIR}/include
         ${CXX_JUCE_BINDINGS_DIR}/sources
@@ -44,16 +45,24 @@ target_include_directories(cxx-juce
 
 target_sources(cxx-juce
     PRIVATE
+        cxx_juce.h
         cxx_juce.cpp
-        cxx_juce_audio_callback_handle.cpp
+        cxx_juce_bindings.h
         cxx_juce_bindings.cpp
-        cxx_juce_audio_device_setup.cpp
-        cxx_juce_audio_device_manager.cpp
-        cxx_juce_system_audio_volume.cpp
-        cxx_juce_audio_io_device_type.cpp
-        cxx_juce_audio_io_device.cpp
-        cxx_juce_audio_basics.cpp
-        cxx_juce_message_manager.cpp
+        cxx_juce_audio_basics/cxx_juce_iir_filter.h
+        cxx_juce_audio_basics/cxx_juce_iir_filter.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_callback_handle.h
+        cxx_juce_audio_devices/cxx_juce_audio_callback_handle.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_device_setup.h
+        cxx_juce_audio_devices/cxx_juce_audio_device_setup.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_device_manager.h
+        cxx_juce_audio_devices/cxx_juce_audio_device_manager.cpp
+        cxx_juce_audio_devices/cxx_juce_system_audio_volume.h
+        cxx_juce_audio_devices/cxx_juce_system_audio_volume.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.h
+        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_io_device.h
+        cxx_juce_audio_devices/cxx_juce_audio_io_device.cpp
 )
 
 target_link_libraries(cxx-juce
