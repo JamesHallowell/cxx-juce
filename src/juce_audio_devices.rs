@@ -227,7 +227,7 @@ impl<'juce> AudioDeviceManager<'juce> {
     pub fn new(_juce: &'juce JUCE) -> Self {
         Self {
             device_manager: juce::create_audio_device_manager(),
-            _juce: PhantomData::default(),
+            _juce: PhantomData,
         }
     }
 
@@ -293,11 +293,12 @@ impl<'juce> AudioDeviceManager<'juce> {
     ) -> AudioCallbackHandle<'_> {
         let callback = Box::new(callback);
 
-        AudioCallbackHandle(
-            self.device_manager
+        AudioCallbackHandle {
+            _handle: self
+                .device_manager
                 .pin_mut()
                 .add_audio_callback(Box::new(callback)),
-        )
+        }
     }
 
     /// Registers an audio device type.
@@ -344,7 +345,9 @@ pub(crate) type BoxedAudioIODevice = Box<dyn AudioIODevice>;
 ///
 /// When this handle is dropped the callback is removed.
 #[must_use]
-pub struct AudioCallbackHandle<'a>(cxx::UniquePtr<juce::AudioCallbackHandle<'a>>);
+pub struct AudioCallbackHandle<'a> {
+    _handle: cxx::UniquePtr<juce::AudioCallbackHandle<'a>>,
+}
 
 /// A trait representing a type of audio driver (e.g. CoreAudio, ASIO, etc.).
 pub trait AudioIODeviceType {
@@ -680,7 +683,7 @@ pub(crate) mod ffi {
                 return;
             }
 
-            unsafe { Box::from_raw(device) };
+            let _ = unsafe { Box::from_raw(device) };
         }
     }
 
@@ -741,7 +744,7 @@ impl SystemAudioVolume {
 
     /// Set the system volume.
     pub fn set_gain(gain: f32) {
-        juce::set_gain(gain.max(0.0).min(1.0))
+        juce::set_gain(gain.clamp(0.0, 1.0))
     }
 
     /// Returns true if the system audio output is muted.
