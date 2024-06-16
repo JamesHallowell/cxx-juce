@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cxx_juce_audio_callback_handle.h"
+#include "cxx_juce_audio_callback_wrapper.h"
 #include "cxx_juce_audio_device_setup.h"
 
 #include <juce_audio_devices/juce_audio_devices.h>
@@ -17,8 +17,8 @@ struct AudioDeviceManager
                                        rust::i32 outputChannels);
     [[nodiscard]] std::unique_ptr<AudioDeviceSetup> getAudioDeviceSetup() const;
     void setAudioDeviceSetup (const AudioDeviceSetup& setup);
-    [[nodiscard]] std::unique_ptr<AudioCallbackHandle>
-        addAudioCallback (rust::Box<BoxedAudioIODeviceCallback> callback);
+    void addAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback);
+    void removeAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback);
     void addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> audioIODeviceType);
     void setCurrentAudioDeviceType (rust::Str audioDeviceTypeName);
     void playTestSound();

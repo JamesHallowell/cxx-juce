@@ -81,9 +81,11 @@ fn main() -> Result<()> {
     let mut device_manager = AudioDeviceManager::new(&juce);
     device_manager.initialise(0, 2)?;
 
-    let _handle = device_manager.add_audio_callback(AudioCallback::default());
+    let handle = device_manager.add_audio_callback(AudioCallback::default());
 
     sleep(Duration::from_secs(2));
+
+    device_manager.remove_audio_callback(handle);
 
     Ok(())
 }

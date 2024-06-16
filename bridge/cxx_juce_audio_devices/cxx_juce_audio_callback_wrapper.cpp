@@ -2,19 +2,12 @@
 
 namespace cxx_juce
 {
-AudioCallbackHandle::AudioCallbackHandle (juce::AudioDeviceManager& audioDeviceManager, rust::Box<BoxedAudioIODeviceCallback> callback)
-    : _audioDeviceManager (audioDeviceManager)
-    , _callback (std::move (callback))
+AudioCallbackWrapper::AudioCallbackWrapper (rust::Box<BoxedAudioIODeviceCallback> callback)
+    : _callback (std::move (callback))
 {
-    _audioDeviceManager.addAudioCallback (this);
 }
 
-AudioCallbackHandle::~AudioCallbackHandle()
-{
-    _audioDeviceManager.removeAudioCallback (this);
-}
-
-void AudioCallbackHandle::audioDeviceIOCallbackWithContext (
+void AudioCallbackWrapper::audioDeviceIOCallbackWithContext (
     const float* const* inputChannelData,
     int numInputChannels,
     float* const* outputChannelData,
@@ -43,7 +36,7 @@ void AudioCallbackHandle::audioDeviceIOCallbackWithContext (
                                             outputBuffer);
 }
 
-void AudioCallbackHandle::audioDeviceAboutToStart (juce::AudioIODevice* device)
+void AudioCallbackWrapper::audioDeviceAboutToStart (juce::AudioIODevice* device)
 {
     if (! device)
     {
@@ -54,8 +47,14 @@ void AudioCallbackHandle::audioDeviceAboutToStart (juce::AudioIODevice* device)
                                             *device);
 }
 
-void AudioCallbackHandle::audioDeviceStopped()
+void AudioCallbackWrapper::audioDeviceStopped()
 {
     audio_io_device_callback::stopped (*_callback);
 }
+
+std::unique_ptr<AudioCallbackWrapper> wrapAudioCallback (rust::Box<BoxedAudioIODeviceCallback> callback)
+{
+    return std::make_unique<AudioCallbackWrapper> (std::move (callback));
+}
+
 } // namespace cxx_juce

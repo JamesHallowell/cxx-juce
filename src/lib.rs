@@ -241,6 +241,11 @@ pub(crate) mod juce {
         #[rust_name = "create_audio_device_manager"]
         pub fn createAudioDeviceManager() -> UniquePtr<AudioDeviceManager>;
 
+        #[rust_name = "wrap_audio_callback"]
+        pub fn wrapAudioCallback(
+            callback: Box<BoxedAudioIODeviceCallback>,
+        ) -> UniquePtr<AudioCallbackWrapper>;
+
         #[rust_name = "initialise_with_default_devices"]
         pub fn initialiseWithDefaultDevices(
             self: Pin<&mut AudioDeviceManager>,
@@ -269,10 +274,16 @@ pub(crate) mod juce {
         pub fn playTestSound(self: Pin<&mut AudioDeviceManager>);
 
         #[rust_name = "add_audio_callback"]
-        pub fn addAudioCallback<'a>(
+        pub fn addAudioCallback(
             self: Pin<&mut AudioDeviceManager>,
-            callback: Box<BoxedAudioIODeviceCallback>,
-        ) -> UniquePtr<AudioCallbackHandle<'a>>;
+            callback: &UniquePtr<AudioCallbackWrapper>,
+        );
+
+        #[rust_name = "remove_audio_callback"]
+        pub fn removeAudioCallback(
+            self: Pin<&mut AudioDeviceManager>,
+            callback: &UniquePtr<AudioCallbackWrapper>,
+        );
 
         #[rust_name = "add_audio_device_type"]
         pub fn addAudioDeviceType(
@@ -371,7 +382,7 @@ pub(crate) mod juce {
         #[rust_name = "clear"]
         pub fn clear(self: Pin<&mut AudioSampleBuffer>);
 
-        pub type AudioCallbackHandle<'a>;
+        pub type AudioCallbackWrapper;
 
         #[namespace = "cxx_juce::system_audio_volume"]
         #[rust_name = "set_muted"]

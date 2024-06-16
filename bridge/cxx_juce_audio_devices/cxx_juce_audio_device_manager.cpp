@@ -22,10 +22,14 @@ void AudioDeviceManager::setAudioDeviceSetup (const AudioDeviceSetup& setup)
     _audioDeviceManager.setAudioDeviceSetup (setup._audioDeviceSetup, true);
 }
 
-[[nodiscard]] std::unique_ptr<AudioCallbackHandle>
-    AudioDeviceManager::addAudioCallback (rust::Box<BoxedAudioIODeviceCallback> callback)
+void AudioDeviceManager::addAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback)
 {
-    return std::make_unique<AudioCallbackHandle> (_audioDeviceManager, std::move (callback));
+    _audioDeviceManager.addAudioCallback (callback.get());
+}
+
+void AudioDeviceManager::removeAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback)
+{
+    _audioDeviceManager.removeAudioCallback (callback.get());
 }
 
 void AudioDeviceManager::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> audioIODeviceType)
@@ -271,4 +275,5 @@ std::unique_ptr<AudioDeviceManager> createAudioDeviceManager()
     jassert (juce::MessageManager::getInstanceWithoutCreating());
     return std::make_unique<AudioDeviceManager>();
 }
+
 } // namespace cxx_juce
