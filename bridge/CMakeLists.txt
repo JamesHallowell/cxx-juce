@@ -8,7 +8,7 @@ set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
 
 include(FetchContent)
 
-set(CXX_JUCE_VERSION_OF_JUCE 7.0.6)
+set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
 
 FetchContent_Declare(
     JUCE
