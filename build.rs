@@ -1,6 +1,10 @@
 use std::{env, path::Path};
 
 fn main() {
+    if env::var("DOCS_RS").is_ok() {
+        return;
+    }
+
     let _ = cxx_build::bridge("src/lib.rs");
 
     let mut cmake = cmake::Config::new("bridge");
