@@ -10,6 +10,8 @@ include(FetchContent)
 
 set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
 
+add_compile_definitions (JUCE_USE_FREETYPE=0)
+
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
