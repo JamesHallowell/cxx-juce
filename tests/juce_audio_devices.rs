@@ -101,7 +101,7 @@ impl AudioIODevice for MockAudioDevice {
 
 #[test]
 fn can_query_audio_device_types() {
-    let juce = JUCE::wait_to_initialise_in_test_context();
+    let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
     audio_device_manager.set_current_audio_device_type("Test");
@@ -131,7 +131,7 @@ fn can_query_audio_device_types() {
 
 #[test]
 fn can_configure_audio_device_setup() {
-    let juce = JUCE::wait_to_initialise_in_test_context();
+    let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
     audio_device_manager.set_current_audio_device_type("Test");
@@ -158,7 +158,7 @@ fn can_configure_audio_device_setup() {
 
 #[test]
 fn can_create_devices() {
-    let juce = JUCE::wait_to_initialise_in_test_context();
+    let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
     audio_device_manager.set_current_audio_device_type("Test");
