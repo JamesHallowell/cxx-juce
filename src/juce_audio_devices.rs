@@ -4,7 +4,6 @@ use {
     crate::{juce, Result, JUCE},
     slotmap::SlotMap,
     std::{
-        marker::PhantomData,
         ops::{Index, IndexMut},
         pin::Pin,
     },
@@ -222,19 +221,19 @@ slotmap::new_key_type! {
 }
 
 /// Manages the state of an audio device.
-pub struct AudioDeviceManager<'juce> {
+pub struct AudioDeviceManager {
     device_manager: cxx::UniquePtr<juce::AudioDeviceManager>,
     callbacks: SlotMap<AudioCallbackKey, cxx::UniquePtr<juce::AudioCallbackWrapper>>,
-    _juce: PhantomData<&'juce ()>,
+    _juce: JUCE,
 }
 
-impl<'juce> AudioDeviceManager<'juce> {
+impl AudioDeviceManager {
     /// Create a new [`AudioDeviceManager`].
-    pub fn new(_juce: &'juce JUCE) -> Self {
+    pub fn new(juce: &JUCE) -> Self {
         Self {
             device_manager: juce::create_audio_device_manager(),
             callbacks: SlotMap::with_key(),
-            _juce: PhantomData,
+            _juce: juce.clone(),
         }
     }
 
