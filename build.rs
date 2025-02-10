@@ -39,11 +39,19 @@ fn main() {
     println!("cargo:rerun-if-changed=bridge");
     println!("cargo:rerun-if-env-changed=CXX_JUCE_ASIO_SDK_DIR");
 
-    println!(
-        "cargo:rustc-link-search=native={}/build/cxx-juce_artefacts/{}",
-        destination.display(),
-        cmake.get_profile(),
-    );
+    if cfg!(target_os = "windows") {
+        println!(
+            "cargo:rustc-link-search=native={}/build/{}",
+            destination.display(),
+            cmake.get_profile()
+        );
+    } else {
+        println!(
+            "cargo:rustc-link-search=native={}/build",
+            destination.display()
+        );
+    };
+
     println!("cargo:rustc-link-lib=static=cxx-juce");
 
     if cfg!(target_os = "macos") {
