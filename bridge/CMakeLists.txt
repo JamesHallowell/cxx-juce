@@ -10,12 +10,12 @@ set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
 set(JUCE_MODULES_ONLY ON)
 
 include(FetchContent)
+set(JUCE_URL https://github.com/juce-framework/JUCE/archive/refs/tags/${CXX_JUCE_VERSION_OF_JUCE}.tar.gz)
 FetchContent_Declare(
     JUCE
-    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG ${CXX_JUCE_VERSION_OF_JUCE}
+    URL ${JUCE_URL}
+    URL_HASH SHA256=94e3b35e1990cd67f59736bb5e1eff1cfd9590b16fea82696f309a8f59452434
 )
-
 message(STATUS "Fetching JUCE ${CXX_JUCE_VERSION_OF_JUCE}...")
 FetchContent_MakeAvailable(JUCE)
 
