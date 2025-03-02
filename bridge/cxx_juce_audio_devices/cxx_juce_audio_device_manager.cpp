@@ -255,7 +255,7 @@ void AudioDeviceManager::playTestSound()
     _audioDeviceManager.playTestSound();
 }
 
-juce::AudioIODevice* AudioDeviceManager::getCurrentAudioDevice() const
+juce::AudioIODevice* AudioDeviceManager::getCurrentAudioDevice()
 {
     return _audioDeviceManager.getCurrentAudioDevice();
 }
