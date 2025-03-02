@@ -267,17 +267,23 @@ impl AudioDeviceManager {
 
         (0..available_device_types.size())
             .map(|i| available_device_types.get_unchecked(i))
+            .map(|device_type_ptr| {
+                let device_type_ref = unsafe {
+                    device_type_ptr
+                        .as_mut()
+                        .expect("device type ptr should not be null")
+                };
+
+                unsafe { Pin::new_unchecked(device_type_ref) }
+            })
             .collect()
     }
 
     /// Get the current device type.
     pub fn current_device_type(&self) -> Option<impl AudioIODeviceType + '_> {
         let device_type = self.device_manager.get_current_device_type_object();
-        if !device_type.is_null() {
-            Some(device_type)
-        } else {
-            None
-        }
+
+        unsafe { device_type.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
     }
 
     /// Get the current [`AudioIODevice`].
@@ -378,38 +384,21 @@ pub trait AudioIODeviceType {
     ) -> Option<Box<dyn AudioIODevice>>;
 }
 
-impl AudioIODeviceType for *mut juce::AudioIODeviceType {
+impl AudioIODeviceType for Pin<&mut juce::AudioIODeviceType> {
     fn name(&self) -> String {
-        if self.is_null() {
-            return String::default();
-        }
-
-        let this = unsafe { &*self.cast_const() };
-        juce::get_type_name(this)
+        juce::get_type_name(self)
     }
 
     fn scan_for_devices(&mut self) {
-        if let Some(this) = unsafe { self.as_mut().map(|ptr| Pin::new_unchecked(ptr)) } {
-            this.scan_for_devices();
-        }
+        juce::AudioIODeviceType::scan_for_devices(self.as_mut())
     }
 
     fn input_devices(&self) -> Vec<String> {
-        if self.is_null() {
-            return vec![];
-        }
-
-        let this = unsafe { &*self.cast_const() };
-        juce::get_input_device_names(this)
+        juce::get_input_device_names(self)
     }
 
     fn output_devices(&self) -> Vec<String> {
-        if self.is_null() {
-            return vec![];
-        }
-
-        let this = unsafe { &*self.cast_const() };
-        juce::get_output_device_names(this)
+        juce::get_output_device_names(self)
     }
 
     fn create_device(
@@ -417,10 +406,9 @@ impl AudioIODeviceType for *mut juce::AudioIODeviceType {
         input_device_name: &str,
         output_device_name: &str,
     ) -> Option<Box<dyn AudioIODevice>> {
-        unsafe { self.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
-            .map(|this| juce::new_device(this, input_device_name, output_device_name))
-            .filter(|device| !device.is_null())
-            .map(|device| Box::new(device) as _)
+        let device = juce::new_device(self.as_mut(), input_device_name, output_device_name);
+
+        (!device.is_null()).then(|| -> Box<dyn AudioIODevice> { Box::new(device) })
     }
 }
 
