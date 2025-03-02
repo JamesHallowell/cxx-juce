@@ -281,13 +281,10 @@ impl AudioDeviceManager {
     }
 
     /// Get the current [`AudioIODevice`].
-    pub fn current_device(&self) -> Option<impl AudioIODevice + '_> {
-        let current_device = self.device_manager.get_current_audio_device();
-        if !current_device.is_null() {
-            Some(current_device)
-        } else {
-            None
-        }
+    pub fn current_device(&mut self) -> Option<impl AudioIODevice + '_> {
+        let current_device = self.device_manager.pin_mut().get_current_audio_device();
+
+        unsafe { current_device.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
     }
 
     /// Registers an audio callback.
@@ -458,70 +455,6 @@ pub trait AudioIODevice {
 
     /// The number of output channels.
     fn output_channels(&self) -> i32;
-}
-
-impl AudioIODevice for *mut juce::AudioIODevice {
-    fn name(&self) -> &str {
-        unsafe { self.as_ref() }
-            .map(juce::get_device_name)
-            .unwrap_or_default()
-    }
-
-    fn type_name(&self) -> &str {
-        unsafe { self.as_ref() }
-            .map(juce::get_device_type_name)
-            .unwrap_or_default()
-    }
-
-    fn sample_rate(&mut self) -> f64 {
-        unsafe { self.as_mut().map(|this| Pin::new_unchecked(this)) }
-            .map(|this| this.get_current_sample_rate())
-            .unwrap_or_default()
-    }
-
-    fn buffer_size(&mut self) -> usize {
-        unsafe { self.as_mut().map(|this| Pin::new_unchecked(this)) }
-            .map(|this| this.get_current_buffer_size_samples() as usize)
-            .unwrap_or_default()
-    }
-
-    fn available_sample_rates(&mut self) -> Vec<f64> {
-        unsafe { self.as_mut().map(|this| Pin::new_unchecked(this)) }
-            .map(juce::get_available_sample_rates)
-            .unwrap_or_default()
-    }
-
-    fn available_buffer_sizes(&mut self) -> Vec<usize> {
-        unsafe { self.as_mut().map(|this| Pin::new_unchecked(this)) }
-            .map(juce::get_available_buffer_sizes)
-            .unwrap_or_default()
-    }
-
-    fn open(&mut self, sample_rate: f64, buffer_size: usize) -> Result<()> {
-        if let Some(this) = unsafe { self.as_mut().map(|this| Pin::new_unchecked(this)) } {
-            juce::open(this, sample_rate, buffer_size)?;
-        }
-
-        Ok(())
-    }
-
-    fn close(&mut self) {
-        if let Some(this) = unsafe { self.as_mut().map(|this| Pin::new_unchecked(this)) } {
-            this.close();
-        }
-    }
-
-    fn input_channels(&self) -> i32 {
-        unsafe { self.as_ref() }
-            .map(juce::count_active_input_channels)
-            .unwrap_or_default()
-    }
-
-    fn output_channels(&self) -> i32 {
-        unsafe { self.as_ref() }
-            .map(juce::count_active_output_channels)
-            .unwrap_or_default()
-    }
 }
 
 impl AudioIODevice for Pin<&mut juce::AudioIODevice> {

@@ -22,7 +22,7 @@ struct AudioDeviceManager
     void addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> audioIODeviceType);
     void setCurrentAudioDeviceType (rust::Str audioDeviceTypeName);
     void playTestSound();
-    juce::AudioIODevice* getCurrentAudioDevice() const;
+    juce::AudioIODevice* getCurrentAudioDevice();
     const juce::OwnedArray<juce::AudioIODeviceType>& getAvailableDeviceTypes();
     juce::AudioIODeviceType* getCurrentDeviceTypeObject() const;
 

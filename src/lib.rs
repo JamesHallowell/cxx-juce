@@ -299,7 +299,7 @@ pub(crate) mod juce {
         pub fn setAudioDeviceSetup(self: Pin<&mut AudioDeviceManager>, setup: &AudioDeviceSetup);
 
         #[rust_name = "get_current_audio_device"]
-        pub fn getCurrentAudioDevice(self: &AudioDeviceManager) -> *mut AudioIODevice;
+        pub fn getCurrentAudioDevice(self: Pin<&mut AudioDeviceManager>) -> *mut AudioIODevice;
 
         #[rust_name = "get_available_device_types"]
         pub fn getAvailableDeviceTypes(
