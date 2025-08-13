@@ -9,17 +9,37 @@ set(CXX_JUCE_USE_ASIO OFF CACHE BOOL "Use ASIO")
 set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
 set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
 
+# Add option to use system-provided JUCE source
+set(CXX_JUCE_SYSTEM_JUCE_SOURCE "" CACHE PATH "Path to pre-fetched JUCE source directory")
+
 set(JUCE_MODULES_ONLY ON)
 
-include(FetchContent)
-set(JUCE_URL https://github.com/juce-framework/JUCE/archive/refs/tags/${CXX_JUCE_VERSION_OF_JUCE}.tar.gz)
-FetchContent_Declare(
-    JUCE
-    URL ${JUCE_URL}
-    URL_HASH SHA256=94e3b35e1990cd67f59736bb5e1eff1cfd9590b16fea82696f309a8f59452434
+# First try to find installed JUCE
+find_package(JUCE QUIET COMPONENTS 
+    juce_audio_basics
+    juce_audio_devices
+    juce_core
+    juce_events
 )
-message(STATUS "Fetching JUCE ${CXX_JUCE_VERSION_OF_JUCE}...")
-FetchContent_MakeAvailable(JUCE)
+
+if(JUCE_FOUND)
+    message(STATUS "Found installed JUCE")
+elseif(CXX_JUCE_SYSTEM_JUCE_SOURCE)
+    # Use system-provided JUCE source
+    message(STATUS "Using system-provided JUCE source at ${CXX_JUCE_SYSTEM_JUCE_SOURCE}")
+    add_subdirectory(${CXX_JUCE_SYSTEM_JUCE_SOURCE} ${CMAKE_BINARY_DIR}/juce-build)
+else()
+    # Fetch JUCE from GitHub (original behavior)
+    include(FetchContent)
+    set(JUCE_URL https://github.com/juce-framework/JUCE/archive/refs/tags/${CXX_JUCE_VERSION_OF_JUCE}.tar.gz)
+    FetchContent_Declare(
+        JUCE
+        URL ${JUCE_URL}
+        URL_HASH SHA256=94e3b35e1990cd67f59736bb5e1eff1cfd9590b16fea82696f309a8f59452434
+    )
+    message(STATUS "Fetching JUCE ${CXX_JUCE_VERSION_OF_JUCE}...")
+    FetchContent_MakeAvailable(JUCE)
+endif()
 
 add_library(cxx-juce STATIC)
 
