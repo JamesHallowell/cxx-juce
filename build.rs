@@ -13,6 +13,11 @@ fn main() {
     let out_dir = env::var("OUT_DIR").unwrap();
     cmake.define("CXX_JUCE_BINDINGS_DIR", format!("{out_dir}/cxxbridge"));
 
+    // Pass system JUCE source if provided (for Nix builds)
+    if let Ok(juce_path) = env::var("CXX_JUCE_SYSTEM_JUCE_SOURCE") {
+        cmake.define("CXX_JUCE_SYSTEM_JUCE_SOURCE", juce_path);
+    }
+
     if cfg!(feature = "asio") {
         cmake.define("CXX_JUCE_USE_ASIO", "ON");
 
@@ -38,6 +43,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=bridge");
     println!("cargo:rerun-if-env-changed=CXX_JUCE_ASIO_SDK_DIR");
+    println!("cargo:rerun-if-env-changed=CXX_JUCE_SYSTEM_JUCE_SOURCE");
 
     if cfg!(target_os = "windows") {
         println!(
