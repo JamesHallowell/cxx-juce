@@ -1,5 +1,6 @@
 //! Play and record from audio and MIDI I/O devices.
 
+use crate::juce::AudioDeviceManagerBridge;
 use {
     crate::{juce, Result, JUCE},
     slotmap::SlotMap,
@@ -222,7 +223,7 @@ slotmap::new_key_type! {
 
 /// Manages the state of an audio device.
 pub struct AudioDeviceManager {
-    device_manager: cxx::UniquePtr<juce::AudioDeviceManager>,
+    device_manager: AudioDeviceManagerBridge,
     callbacks: SlotMap<AudioCallbackKey, cxx::UniquePtr<juce::AudioCallbackWrapper>>,
     _juce: JUCE,
 }
@@ -231,7 +232,7 @@ impl AudioDeviceManager {
     /// Create a new [`AudioDeviceManager`].
     pub fn new(juce: &JUCE) -> Self {
         Self {
-            device_manager: juce::create_audio_device_manager(),
+            device_manager: AudioDeviceManagerBridge::make(),
             callbacks: SlotMap::with_key(),
             _juce: juce.clone(),
         }
@@ -240,7 +241,6 @@ impl AudioDeviceManager {
     /// Resets to a default device setup.
     pub fn initialise(&mut self, input_channels: usize, output_channels: usize) -> Result<()> {
         self.device_manager
-            .pin_mut()
             .initialise_with_default_devices(input_channels as i32, output_channels as i32)
     }
 
@@ -251,19 +251,17 @@ impl AudioDeviceManager {
 
     /// Changes the current device or its settings.
     pub fn set_audio_device_setup(&mut self, setup: &AudioDeviceSetup) {
-        self.device_manager
-            .pin_mut()
-            .set_audio_device_setup(&setup.0);
+        self.device_manager.set_audio_device_setup(&setup.0);
     }
 
     /// Play a test sound.
     pub fn play_test_sound(&mut self) {
-        self.device_manager.pin_mut().play_test_sound();
+        self.device_manager.play_test_sound();
     }
 
     /// Get the available device types.
     pub fn device_types(&mut self) -> Vec<impl AudioIODeviceType + '_> {
-        let available_device_types = self.device_manager.pin_mut().get_available_device_types();
+        let available_device_types = self.device_manager.get_available_device_types();
 
         (0..available_device_types.size())
             .map(|i| available_device_types.get_unchecked(i))
@@ -288,7 +286,7 @@ impl AudioDeviceManager {
 
     /// Get the current [`AudioIODevice`].
     pub fn current_device(&mut self) -> Option<impl AudioIODevice + '_> {
-        let current_device = self.device_manager.pin_mut().get_current_audio_device();
+        let current_device = self.device_manager.get_current_audio_device();
 
         unsafe { current_device.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
     }
@@ -301,7 +299,7 @@ impl AudioDeviceManager {
         let callback = Box::new(callback);
         let callback = juce::wrap_audio_callback(Box::new(callback));
 
-        self.device_manager.pin_mut().add_audio_callback(&callback);
+        self.device_manager.add_audio_callback(&callback);
         let key = self.callbacks.insert(callback);
 
         AudioCallbackHandle { key }
@@ -310,9 +308,7 @@ impl AudioDeviceManager {
     /// Removes an audio callback.
     pub fn remove_audio_callback(&mut self, handle: AudioCallbackHandle) {
         if let Some(callback) = self.callbacks.remove(handle.key) {
-            self.device_manager
-                .pin_mut()
-                .remove_audio_callback(&callback);
+            self.device_manager.remove_audio_callback(&callback);
         }
     }
 
@@ -320,14 +316,12 @@ impl AudioDeviceManager {
     pub fn add_audio_device_type(&mut self, device_type: impl AudioIODeviceType + 'static) {
         let device_type = Box::new(device_type);
         self.device_manager
-            .pin_mut()
             .add_audio_device_type(Box::new(device_type));
     }
 
     /// Set the current audio device type to use.
     pub fn set_current_audio_device_type(&mut self, device_type: &str) {
         self.device_manager
-            .pin_mut()
             .set_current_audio_device_type(device_type);
     }
 }

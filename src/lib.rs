@@ -102,29 +102,18 @@ impl JUCE {
 pub type Exception = cxx::Exception;
 pub type Result<T> = std::result::Result<T, Exception>;
 
-struct Wowza(cxx::UniquePtr<juce::AudioDeviceManager>);
-
-impl Wowza {
-    fn do_do(&self) {}
-
-    fn get(&self) -> &cxx::UniquePtr<juce::AudioDeviceManager> {
-        &self.0
-    }
-}
-
 #[cxx::bridge(namespace = "cxx_juce")]
 pub(crate) mod juce {
-    struct Shared {
-        thing: UniquePtr<AudioDeviceManager>,
+    struct AudioDeviceManagerBridge {
+        ptr: UniquePtr<AudioDeviceManager>,
+    }
+
+    struct AudioIODeviceBridge {
+        ptr: *mut AudioIODevice,
     }
 
     extern "Rust" {
         type BoxedAudioIODeviceCallback;
-
-        type Wowza;
-
-        fn do_do(self: &Wowza);
-        fn get(self: &Wowza) -> &UniquePtr<AudioDeviceManager>;
 
         #[namespace = "audio_io_device_callback"]
         #[cxx_name = "aboutToStart"]
@@ -213,13 +202,8 @@ pub(crate) mod juce {
     unsafe extern "C++" {
         include!("cxx-juce/bridge/cxx_juce.h");
 
-        pub fn wowee(_: &Wowza);
-
-        pub fn cool(self: &Shared);
-        pub fn cool2(self: &mut Shared);
-
-        #[rust_name = "make_shared"]
-        pub fn makeShared() -> Shared;
+        #[Self = "AudioDeviceManagerBridge"]
+        pub fn make() -> AudioDeviceManagerBridge;
 
         #[rust_name = "version"]
         pub fn juceVersion() -> String;
@@ -302,10 +286,8 @@ pub(crate) mod juce {
         #[rust_name = "using_default_output_channels"]
         pub fn usingDefaultOutputChannels(self: &AudioDeviceSetup) -> bool;
 
+        #[namespace = "juce"]
         pub type AudioDeviceManager;
-
-        #[rust_name = "create_audio_device_manager"]
-        pub fn createAudioDeviceManager() -> UniquePtr<AudioDeviceManager>;
 
         #[rust_name = "wrap_audio_callback"]
         pub fn wrapAudioCallback(
@@ -314,51 +296,53 @@ pub(crate) mod juce {
 
         #[rust_name = "initialise_with_default_devices"]
         pub fn initialiseWithDefaultDevices(
-            self: Pin<&mut AudioDeviceManager>,
+            self: &mut AudioDeviceManagerBridge,
             num_input_channels: i32,
             num_output_channels: i32,
         ) -> Result<()>;
 
         #[rust_name = "get_audio_device_setup"]
-        pub fn getAudioDeviceSetup(self: &AudioDeviceManager) -> UniquePtr<AudioDeviceSetup>;
+        pub fn getAudioDeviceSetup(self: &AudioDeviceManagerBridge) -> UniquePtr<AudioDeviceSetup>;
 
         #[rust_name = "set_audio_device_setup"]
-        pub fn setAudioDeviceSetup(self: Pin<&mut AudioDeviceManager>, setup: &AudioDeviceSetup);
+        pub fn setAudioDeviceSetup(self: &mut AudioDeviceManagerBridge, setup: &AudioDeviceSetup);
 
         #[rust_name = "get_current_audio_device"]
-        pub fn getCurrentAudioDevice(self: Pin<&mut AudioDeviceManager>) -> *mut AudioIODevice;
+        pub fn getCurrentAudioDevice(self: &mut AudioDeviceManagerBridge) -> *mut AudioIODevice;
 
         #[rust_name = "get_available_device_types"]
         pub fn getAvailableDeviceTypes(
-            self: Pin<&mut AudioDeviceManager>,
+            self: &mut AudioDeviceManagerBridge,
         ) -> &AudioIODeviceTypeArray;
 
         #[rust_name = "get_current_device_type_object"]
-        pub fn getCurrentDeviceTypeObject(self: &AudioDeviceManager) -> *mut AudioIODeviceType;
+        pub fn getCurrentDeviceTypeObject(
+            self: &AudioDeviceManagerBridge,
+        ) -> *mut AudioIODeviceType;
 
         #[rust_name = "play_test_sound"]
-        pub fn playTestSound(self: Pin<&mut AudioDeviceManager>);
+        pub fn playTestSound(self: &mut AudioDeviceManagerBridge);
 
         #[rust_name = "add_audio_callback"]
         pub fn addAudioCallback(
-            self: Pin<&mut AudioDeviceManager>,
+            self: &mut AudioDeviceManagerBridge,
             callback: &UniquePtr<AudioCallbackWrapper>,
         );
 
         #[rust_name = "remove_audio_callback"]
         pub fn removeAudioCallback(
-            self: Pin<&mut AudioDeviceManager>,
+            self: &mut AudioDeviceManagerBridge,
             callback: &UniquePtr<AudioCallbackWrapper>,
         );
 
         #[rust_name = "add_audio_device_type"]
         pub fn addAudioDeviceType(
-            self: Pin<&mut AudioDeviceManager>,
+            self: &mut AudioDeviceManagerBridge,
             device_type: Box<BoxedAudioIODeviceType>,
         );
 
         #[rust_name = "set_current_audio_device_type"]
-        pub fn setCurrentAudioDeviceType(self: Pin<&mut AudioDeviceManager>, device_type: &str);
+        pub fn setCurrentAudioDeviceType(self: &mut AudioDeviceManagerBridge, device_type: &str);
 
         #[namespace = "juce"]
         pub type AudioIODevice;
@@ -504,14 +488,6 @@ mod test {
             let _juce = JUCE::initialise();
         })
         .join()
-    }
-
-    #[test]
-    fn wat() {
-        let mut shared = juce::make_shared();
-
-        shared.cool();
-        shared.cool2();
     }
 
     #[test]

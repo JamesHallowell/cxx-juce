@@ -2,37 +2,37 @@
 
 namespace cxx_juce
 {
-void AudioDeviceManager::initialiseWithDefaultDevices (rust::i32 inputChannels,
+void AudioDeviceManagerBridge::initialiseWithDefaultDevices (rust::i32 inputChannels,
                                                        rust::i32 outputChannels)
 {
-    const auto result = _audioDeviceManager.initialiseWithDefaultDevices (inputChannels, outputChannels);
+    const auto result = ptr->initialiseWithDefaultDevices (inputChannels, outputChannels);
     if (result.isNotEmpty())
     {
         throw std::runtime_error (result.toStdString());
     }
 }
 
-[[nodiscard]] std::unique_ptr<AudioDeviceSetup> AudioDeviceManager::getAudioDeviceSetup() const
+[[nodiscard]] std::unique_ptr<AudioDeviceSetup> AudioDeviceManagerBridge::getAudioDeviceSetup() const noexcept
 {
-    return std::make_unique<AudioDeviceSetup> (_audioDeviceManager.getAudioDeviceSetup());
+    return std::make_unique<AudioDeviceSetup> (ptr->getAudioDeviceSetup());
 }
 
-void AudioDeviceManager::setAudioDeviceSetup (const AudioDeviceSetup& setup)
+void AudioDeviceManagerBridge::setAudioDeviceSetup (const AudioDeviceSetup& setup) noexcept
 {
-    _audioDeviceManager.setAudioDeviceSetup (setup._audioDeviceSetup, true);
+    ptr->setAudioDeviceSetup (setup._audioDeviceSetup, true);
 }
 
-void AudioDeviceManager::addAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback)
+void AudioDeviceManagerBridge::addAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback) noexcept
 {
-    _audioDeviceManager.addAudioCallback (callback.get());
+    ptr->addAudioCallback (callback.get());
 }
 
-void AudioDeviceManager::removeAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback)
+void AudioDeviceManagerBridge::removeAudioCallback (const std::unique_ptr<AudioCallbackWrapper>& callback) noexcept
 {
-    _audioDeviceManager.removeAudioCallback (callback.get());
+    ptr->removeAudioCallback (callback.get());
 }
 
-void AudioDeviceManager::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> audioIODeviceType)
+void AudioDeviceManagerBridge::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> audioIODeviceType) noexcept
 {
     struct RustAudioIODeviceType : juce::AudioIODeviceType
     {
@@ -242,38 +242,38 @@ void AudioDeviceManager::addAudioDeviceType (rust::Box<BoxedAudioIODeviceType> a
         rust::Box<BoxedAudioIODeviceType> _audioIODeviceType;
     };
 
-    _audioDeviceManager.addAudioDeviceType (std::make_unique<RustAudioIODeviceType> (std::move (audioIODeviceType)));
+    ptr->addAudioDeviceType (std::make_unique<RustAudioIODeviceType> (std::move (audioIODeviceType)));
 }
 
-void AudioDeviceManager::setCurrentAudioDeviceType (rust::Str audioDeviceTypeName)
+void AudioDeviceManagerBridge::setCurrentAudioDeviceType (rust::Str audioDeviceTypeName) noexcept
 {
-    _audioDeviceManager.setCurrentAudioDeviceType (static_cast<std::string> (audioDeviceTypeName), true);
+    ptr->setCurrentAudioDeviceType (static_cast<std::string> (audioDeviceTypeName), true);
 }
 
-void AudioDeviceManager::playTestSound()
+void AudioDeviceManagerBridge::playTestSound() noexcept
 {
-    _audioDeviceManager.playTestSound();
+    ptr->playTestSound();
 }
 
-juce::AudioIODevice* AudioDeviceManager::getCurrentAudioDevice()
+juce::AudioIODevice* AudioDeviceManagerBridge::getCurrentAudioDevice() noexcept
 {
-    return _audioDeviceManager.getCurrentAudioDevice();
+    return ptr->getCurrentAudioDevice();
 }
 
-const juce::OwnedArray<juce::AudioIODeviceType>& AudioDeviceManager::getAvailableDeviceTypes()
+const juce::OwnedArray<juce::AudioIODeviceType>& AudioDeviceManagerBridge::getAvailableDeviceTypes() noexcept
 {
-    return _audioDeviceManager.getAvailableDeviceTypes();
+    return ptr->getAvailableDeviceTypes();
 }
 
-juce::AudioIODeviceType* AudioDeviceManager::getCurrentDeviceTypeObject() const
+juce::AudioIODeviceType* AudioDeviceManagerBridge::getCurrentDeviceTypeObject() const noexcept
 {
-    return _audioDeviceManager.getCurrentDeviceTypeObject();
+    return ptr->getCurrentDeviceTypeObject();
 }
 
-std::unique_ptr<AudioDeviceManager> createAudioDeviceManager()
+AudioDeviceManagerBridge AudioDeviceManagerBridge::make() noexcept
 {
     jassert (juce::MessageManager::getInstanceWithoutCreating());
-    return std::make_unique<AudioDeviceManager>();
+    return AudioDeviceManagerBridge {std::make_unique<juce::AudioDeviceManager>()};
 }
 
 } // namespace cxx_juce
