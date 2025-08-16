@@ -6,12 +6,21 @@
 namespace cxx_juce
 {
 
-struct BoxedAudioIODeviceCallback;
+class BoxDynAudioIODeviceCallback {
+public:
+    BoxDynAudioIODeviceCallback(BoxDynAudioIODeviceCallback &&) noexcept;
+    ~BoxDynAudioIODeviceCallback() noexcept;
+    using IsRelocatable = std::true_type;
+
+private:
+    using FatPtr = std::array<uintptr_t, 2>;
+    FatPtr repr;
+};
 
 class AudioCallbackWrapper : public juce::AudioIODeviceCallback
 {
 public:
-    explicit AudioCallbackWrapper (rust::Box<BoxedAudioIODeviceCallback> callback);
+    explicit AudioCallbackWrapper (BoxDynAudioIODeviceCallback callback);
 
     void audioDeviceAboutToStart (juce::AudioIODevice* device) override;
     void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
@@ -23,9 +32,9 @@ public:
     void audioDeviceStopped() override;
 
 private:
-    rust::Box<BoxedAudioIODeviceCallback> _callback;
+    BoxDynAudioIODeviceCallback _callback;
 };
 
-std::unique_ptr<AudioCallbackWrapper> wrapAudioCallback (rust::Box<BoxedAudioIODeviceCallback> callback);
+std::unique_ptr<AudioCallbackWrapper> wrapAudioCallback (BoxDynAudioIODeviceCallback callback);
 
 } // namespace cxx_juce

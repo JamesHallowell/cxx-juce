@@ -10,12 +10,12 @@ use {
                 device_available_buffer_sizes, device_available_sample_rates, device_buffer_size,
                 device_close, device_name, device_open, device_sample_rate, device_type_name,
             },
-            audio_io_device_callback::{about_to_start, process_block, stopped},
+            audio_io_device_callback::{about_to_start, drop_callback, process_block, stopped},
             audio_io_device_type::{
                 create_device, destroy_device, get_device_names, name, scan_for_devices,
             },
         },
-        BoxedAudioIODevice, BoxedAudioIODeviceCallback, BoxedAudioIODeviceType,
+        AudioIODeviceCallback, BoxedAudioIODevice, BoxedAudioIODeviceType,
     },
     std::{
         rc::Rc,
@@ -108,31 +108,29 @@ pub(crate) mod juce {
         ptr: UniquePtr<AudioDeviceManager>,
     }
 
-    struct AudioIODeviceBridge {
-        ptr: *mut AudioIODevice,
-    }
-
     extern "Rust" {
-        type BoxedAudioIODeviceCallback;
-
         #[namespace = "audio_io_device_callback"]
         #[cxx_name = "aboutToStart"]
         fn about_to_start(
-            callback: Pin<&mut BoxedAudioIODeviceCallback>,
+            callback: &mut BoxDynAudioIODeviceCallback,
             device: Pin<&mut AudioIODevice>,
         );
 
         #[namespace = "audio_io_device_callback"]
         #[cxx_name = "processBlock"]
         fn process_block(
-            callback: Pin<&mut BoxedAudioIODeviceCallback>,
+            callback: &mut BoxDynAudioIODeviceCallback,
             input: &AudioSampleBuffer,
             output: Pin<&mut AudioSampleBuffer>,
         );
 
         #[namespace = "audio_io_device_callback"]
         #[cxx_name = "stopped"]
-        fn stopped(callback: Pin<&mut BoxedAudioIODeviceCallback>);
+        fn stopped(callback: &mut BoxDynAudioIODeviceCallback);
+
+        #[namespace = "audio_io_device_callback"]
+        #[cxx_name = "drop"]
+        unsafe fn drop_callback(callback: *mut BoxDynAudioIODeviceCallback);
 
         type BoxedAudioIODeviceType;
 
@@ -201,6 +199,8 @@ pub(crate) mod juce {
 
     unsafe extern "C++" {
         include!("cxx-juce/bridge/cxx_juce.h");
+
+        type BoxDynAudioIODeviceCallback = Box<dyn crate::AudioIODeviceCallback>;
 
         #[Self = "AudioDeviceManagerBridge"]
         pub fn make() -> AudioDeviceManagerBridge;
@@ -291,7 +291,7 @@ pub(crate) mod juce {
 
         #[rust_name = "wrap_audio_callback"]
         pub fn wrapAudioCallback(
-            callback: Box<BoxedAudioIODeviceCallback>,
+            callback: BoxDynAudioIODeviceCallback,
         ) -> UniquePtr<AudioCallbackWrapper>;
 
         #[rust_name = "initialise_with_default_devices"]

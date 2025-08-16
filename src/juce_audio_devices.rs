@@ -296,7 +296,6 @@ impl AudioDeviceManager {
         &mut self,
         callback: impl AudioIODeviceCallback + 'static,
     ) -> AudioCallbackHandle {
-        let callback = Box::new(callback);
         let callback = juce::wrap_audio_callback(Box::new(callback));
 
         self.device_manager.add_audio_callback(&callback);
@@ -346,7 +345,6 @@ pub trait AudioIODeviceCallback: Send {
     fn stopped(&mut self);
 }
 
-pub(crate) type BoxedAudioIODeviceCallback = Box<dyn AudioIODeviceCallback>;
 pub(crate) type BoxedAudioIODeviceType = Box<dyn AudioIODeviceType>;
 pub(crate) type BoxedAudioIODevice = Box<dyn AudioIODevice>;
 
@@ -548,16 +546,22 @@ pub(crate) mod ffi {
 
     pub mod audio_io_device_callback {
         use super::*;
+        use std::ptr::drop_in_place;
+
+        unsafe impl cxx::ExternType for Box<dyn AudioIODeviceCallback> {
+            type Id = cxx::type_id!("cxx_juce::BoxDynAudioIODeviceCallback");
+            type Kind = cxx::kind::Trivial;
+        }
 
         pub fn about_to_start(
-            mut self_: Pin<&mut BoxedAudioIODeviceCallback>,
+            self_: &mut juce::BoxDynAudioIODeviceCallback,
             mut device: Pin<&mut juce::AudioIODevice>,
         ) {
             self_.about_to_start(&mut device.as_mut());
         }
 
         pub fn process_block(
-            mut self_: Pin<&mut BoxedAudioIODeviceCallback>,
+            self_: &mut juce::BoxDynAudioIODeviceCallback,
             input: &juce::AudioSampleBuffer,
             output: Pin<&mut juce::AudioSampleBuffer>,
         ) {
@@ -567,8 +571,12 @@ pub(crate) mod ffi {
             self_.process_block(&input, &mut output);
         }
 
-        pub fn stopped(mut self_: Pin<&mut BoxedAudioIODeviceCallback>) {
+        pub fn stopped(self_: &mut juce::BoxDynAudioIODeviceCallback) {
             self_.stopped()
+        }
+
+        pub unsafe fn drop_callback(callback: *mut juce::BoxDynAudioIODeviceCallback) {
+            drop_in_place(callback);
         }
     }
 
