@@ -11,3 +11,15 @@ void setGain (rust::f32 gain);
 rust::f32 getGain();
 
 } // namespace cxx_juce::system_audio_volume
+
+namespace cxx_juce
+{
+
+struct Wowza;
+struct Shared;
+
+void wowee (const Wowza& arg0);
+void cool (const Shared& arg0);
+Shared makeShared();
+
+}

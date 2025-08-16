@@ -1,17 +1,32 @@
-use std::{env, path::Path};
+use std::path::PathBuf;
+use std::{env, ffi::OsStr, path::Path};
+
+fn with_swapped_env_var(key: impl AsRef<OsStr>, value: impl AsRef<OsStr>, f: impl FnOnce()) {
+    let original = env::var(&key).unwrap();
+    unsafe {
+        env::set_var(&key, value.as_ref());
+    }
+    f();
+    unsafe {
+        env::set_var(&key, original);
+    }
+}
 
 fn main() {
     if env::var("DOCS_RS").is_ok() {
         return;
     }
 
-    let _ = cxx_build::bridge("src/lib.rs");
+    let generated_code_path = env::var("CARGO_MANIFEST_DIR")
+        .map(|dir| PathBuf::from(dir).join("bridge").join("generated"))
+        .unwrap();
+
+    with_swapped_env_var("OUT_DIR", generated_code_path, || {
+        let _ = cxx_build::bridge("src/lib.rs");
+    });
 
     let mut cmake = cmake::Config::new("bridge");
     cmake.build_target("cxx-juce");
-
-    let out_dir = env::var("OUT_DIR").unwrap();
-    cmake.define("CXX_JUCE_BINDINGS_DIR", format!("{out_dir}/cxxbridge"));
 
     if cfg!(feature = "asio") {
         cmake.define("CXX_JUCE_USE_ASIO", "ON");

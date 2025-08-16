@@ -102,10 +102,29 @@ impl JUCE {
 pub type Exception = cxx::Exception;
 pub type Result<T> = std::result::Result<T, Exception>;
 
+struct Wowza(cxx::UniquePtr<juce::AudioDeviceManager>);
+
+impl Wowza {
+    fn do_do(&self) {}
+
+    fn get(&self) -> &cxx::UniquePtr<juce::AudioDeviceManager> {
+        &self.0
+    }
+}
+
 #[cxx::bridge(namespace = "cxx_juce")]
 pub(crate) mod juce {
+    struct Shared {
+        thing: UniquePtr<AudioDeviceManager>,
+    }
+
     extern "Rust" {
         type BoxedAudioIODeviceCallback;
+
+        type Wowza;
+
+        fn do_do(self: &Wowza);
+        fn get(self: &Wowza) -> &UniquePtr<AudioDeviceManager>;
 
         #[namespace = "audio_io_device_callback"]
         #[cxx_name = "aboutToStart"]
@@ -193,6 +212,14 @@ pub(crate) mod juce {
 
     unsafe extern "C++" {
         include!("cxx-juce/bridge/cxx_juce.h");
+
+        pub fn wowee(_: &Wowza);
+
+        pub fn cool(self: &Shared);
+        pub fn cool2(self: &mut Shared);
+
+        #[rust_name = "make_shared"]
+        pub fn makeShared() -> Shared;
 
         #[rust_name = "version"]
         pub fn juceVersion() -> String;
@@ -477,6 +504,14 @@ mod test {
             let _juce = JUCE::initialise();
         })
         .join()
+    }
+
+    #[test]
+    fn wat() {
+        let mut shared = juce::make_shared();
+
+        shared.cool();
+        shared.cool2();
     }
 
     #[test]

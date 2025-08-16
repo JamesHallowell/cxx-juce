@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(cxx-juce VERSION 0.1)
 
-set(CXX_JUCE_BINDINGS_DIR "" CACHE PATH "Path to the bindings directory")
+set(CXX_JUCE_BINDINGS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated/cxxbridge" CACHE PATH "Path to the bindings directory")
 set(CXX_JUCE_USE_ASIO OFF CACHE BOOL "Use ASIO")
 set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
 set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
