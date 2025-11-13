@@ -1,9 +1,9 @@
 use cxx_juce::{
-    juce_audio_devices::{AudioDeviceManager, AudioIODeviceType},
-    Result, JUCE,
+    juce_audio_devices::{AudioDeviceManager, AudioDeviceType},
+    JuceError, JUCE,
 };
 
-fn main() -> Result<()> {
+fn main() -> Result<(), JuceError> {
     let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.initialise(2, 2)?;

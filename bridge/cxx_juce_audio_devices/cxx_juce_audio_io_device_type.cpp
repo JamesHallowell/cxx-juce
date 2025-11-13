@@ -1,55 +1,85 @@
-#include <cxx_juce_bindings.h>
+#include "cxx_juce_audio_io_device_type.h"
 
-namespace cxx_juce::audio_io_device_type
+#include <cxx-juce/src/juce_audio_devices/device_type.rs.h>
+#include <cxx-juce/src/juce_audio_devices/mod.rs.h>
+
+namespace cxx_juce
 {
-rust::String getTypeName (const juce::AudioIODeviceType& audioIoDeviceType)
+BoxDynAudioIODeviceType::BoxDynAudioIODeviceType (BoxDynAudioIODeviceType&& other) noexcept
+    : _repr { other._repr }
 {
-    return audioIoDeviceType.getTypeName().toStdString();
+    other._repr = { 0, 0 };
 }
 
-rust::Vec<rust::String> getInputDeviceNames (
-    const juce::AudioIODeviceType& audioIoDeviceType)
+BoxDynAudioIODeviceType::~BoxDynAudioIODeviceType() noexcept
 {
-    const auto deviceNames = audioIoDeviceType.getDeviceNames (true);
-
-    rust::Vec<rust::String> result;
-    std::transform (
-        std::begin (deviceNames),
-        std::end (deviceNames),
-        std::back_inserter (result),
-        [] (const auto& deviceName)
-        { return deviceName.toStdString(); });
-    return result;
-}
-
-rust::Vec<rust::String> getOutputDeviceNames (
-    const juce::AudioIODeviceType& audioIoDeviceType)
-{
-    const auto deviceNames = audioIoDeviceType.getDeviceNames (false);
-
-    rust::Vec<rust::String> result;
-    result.reserve (static_cast<size_t> (deviceNames.size()));
-    std::transform (
-        std::begin (deviceNames),
-        std::end (deviceNames),
-        std::back_inserter (result),
-        [] (const auto& deviceName)
-        { return deviceName.toStdString(); });
-    return result;
-}
-
-std::unique_ptr<juce::AudioIODevice> createDevice (
-    juce::AudioIODeviceType& audioIoDeviceType,
-    rust::Str inputDeviceName,
-    rust::Str outputDeviceName)
-{
-    if (auto* device = audioIoDeviceType.createDevice (
-            static_cast<std::string> (inputDeviceName),
-            static_cast<std::string> (outputDeviceName)))
+    if (_repr != FatPtr { 0, 0 })
     {
-        return std::unique_ptr<juce::AudioIODevice> (device);
+        BoxDynAudioIODeviceTypeImpl::drop (this);
     }
-
-    return nullptr;
 }
-} // namespace cxx_juce::audio_io_device_type
+
+std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODeviceType deviceType)
+{
+    struct AudioIODeviceType : juce::AudioIODeviceType
+    {
+        explicit AudioIODeviceType (BoxDynAudioIODeviceType deviceType)
+            : juce::AudioIODeviceType (
+                  static_cast<std::string> (BoxDynAudioIODeviceTypeImpl::name (deviceType)))
+            , _deviceType { std::move (deviceType) }
+        {
+        }
+
+        void scanForDevices() override
+        {
+            BoxDynAudioIODeviceTypeImpl::scan_for_devices (_deviceType);
+        }
+
+        [[nodiscard]] juce::StringArray getDeviceNames (bool wantInputNames) const override
+        {
+            const auto names = BoxDynAudioIODeviceTypeImpl::get_device_names (_deviceType, wantInputNames);
+
+            juce::StringArray stringArray;
+            for (const auto& name : names)
+            {
+                stringArray.add (static_cast<std::string> (name));
+            }
+            return stringArray;
+        }
+
+        [[nodiscard]] int getDefaultDeviceIndex (bool /*forInput*/) const override
+        {
+            return 0;
+        }
+
+        int getIndexOfDevice (juce::AudioIODevice* device,
+                              bool asInput) const override
+        {
+            return getDeviceNames (asInput).indexOf (device->getName());
+        }
+
+        [[nodiscard]] bool hasSeparateInputsAndOutputs() const override
+        {
+            return true;
+        }
+
+        juce::AudioIODevice* createDevice (const juce::String& inputDeviceName,
+                                           const juce::String& outputDeviceName) override
+        {
+            try
+            {
+                auto box = BoxDynAudioIODeviceTypeImpl::create_device (_deviceType, inputDeviceName, outputDeviceName);
+                return wrapAudioDevice (std::move (box)).release();
+            }
+            catch (const rust::Error&)
+            {
+                return nullptr;
+            }
+        }
+
+        BoxDynAudioIODeviceType _deviceType;
+    };
+
+    return std::make_unique<AudioIODeviceType> (std::move (deviceType));
+}
+} // namespace cxx_juce

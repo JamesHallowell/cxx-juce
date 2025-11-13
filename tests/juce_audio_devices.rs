@@ -1,8 +1,9 @@
 use cxx_juce::{
     juce_audio_devices::{
-        AudioDeviceManager, AudioDeviceSetup, AudioIODevice, AudioIODeviceType, ChannelCount,
+        AudioDevice, AudioDeviceManager, AudioDeviceSetup, AudioDeviceType, ChannelCount,
     },
-    Result, JUCE,
+    juce_core::JuceString,
+    JUCE,
 };
 
 #[derive(Default)]
@@ -11,7 +12,7 @@ struct MockAudioDeviceType {
     output_devices: Vec<String>,
 }
 
-impl AudioIODeviceType for MockAudioDeviceType {
+impl AudioDeviceType for MockAudioDeviceType {
     fn name(&self) -> String {
         "Test".to_string()
     }
@@ -40,7 +41,7 @@ impl AudioIODeviceType for MockAudioDeviceType {
         &mut self,
         input_device_name: &str,
         output_device_name: &str,
-    ) -> Option<Box<dyn AudioIODevice>> {
+    ) -> Option<Box<dyn AudioDevice>> {
         Some(Box::new(MockAudioDevice {
             name: format!("{} / {}", input_device_name, output_device_name),
             type_name: self.name(),
@@ -54,10 +55,10 @@ struct MockAudioDevice {
     name: String,
     type_name: String,
     sample_rate: f64,
-    buffer_size: usize,
+    buffer_size: i32,
 }
 
-impl AudioIODevice for MockAudioDevice {
+impl AudioDevice for MockAudioDevice {
     fn name(&self) -> &str {
         &self.name
     }
@@ -70,7 +71,7 @@ impl AudioIODevice for MockAudioDevice {
         self.sample_rate
     }
 
-    fn buffer_size(&mut self) -> usize {
+    fn buffer_size(&mut self) -> i32 {
         self.buffer_size
     }
 
@@ -78,14 +79,14 @@ impl AudioIODevice for MockAudioDevice {
         vec![44100.0, 48000.0]
     }
 
-    fn available_buffer_sizes(&mut self) -> Vec<usize> {
+    fn available_buffer_sizes(&mut self) -> Vec<i32> {
         vec![128, 256, 512]
     }
 
-    fn open(&mut self, sample_rate: f64, buffer_size: usize) -> Result<()> {
+    fn open(&mut self, sample_rate: f64, buffer_size: i32) -> JuceString {
         self.sample_rate = sample_rate;
         self.buffer_size = buffer_size;
-        Ok(())
+        JuceString::empty()
     }
 
     fn close(&mut self) {}
@@ -104,7 +105,7 @@ fn can_query_audio_device_types() {
     let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
-    audio_device_manager.set_current_audio_device_type("Test");
+    audio_device_manager.set_current_audio_device_type("Test", true);
 
     let mut device_type = audio_device_manager.current_device_type().unwrap();
 
@@ -134,7 +135,7 @@ fn can_configure_audio_device_setup() {
     let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
-    audio_device_manager.set_current_audio_device_type("Test");
+    audio_device_manager.set_current_audio_device_type("Test", true);
     audio_device_manager
         .current_device_type()
         .unwrap()
@@ -146,7 +147,9 @@ fn can_configure_audio_device_setup() {
         .with_input_device_name("Microphone")
         .with_output_device_name("Speakers");
 
-    audio_device_manager.set_audio_device_setup(&setup);
+    audio_device_manager
+        .set_audio_device_setup(&setup, true)
+        .unwrap();
 
     let current_setup = audio_device_manager.audio_device_setup();
 
@@ -154,6 +157,8 @@ fn can_configure_audio_device_setup() {
     assert_eq!(current_setup.sample_rate(), 48000.0);
     assert_eq!(current_setup.input_device_name(), "Microphone");
     assert_eq!(current_setup.output_device_name(), "Speakers");
+    assert_eq!(current_setup.input_channels(), ChannelCount::Default);
+    assert_eq!(current_setup.output_channels(), ChannelCount::Default);
 }
 
 #[test]
@@ -161,7 +166,7 @@ fn can_create_devices() {
     let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.add_audio_device_type(MockAudioDeviceType::default());
-    audio_device_manager.set_current_audio_device_type("Test");
+    audio_device_manager.set_current_audio_device_type("Test", true);
     audio_device_manager
         .current_device_type()
         .unwrap()

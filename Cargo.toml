@@ -11,9 +11,9 @@ documentation = "https://docs.rs/cxx-juce"
 asio = []
 
 [dependencies]
-cxx = "1.0.124"
+cxx = "1.0.188"
 slotmap = "1.0.7"
 
 [build-dependencies]
 cmake = "0.1.50"
-cxx-build = "1.0.124"
+cxx-build = "1.0.188"

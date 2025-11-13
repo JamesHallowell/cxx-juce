@@ -1,17 +1,22 @@
 #pragma once
 
 #include <juce_audio_devices/juce_audio_devices.h>
-#include <rust/cxx.h>
 
-namespace cxx_juce::audio_io_device
+namespace cxx_juce
 {
 
-rust::Str getDeviceName (const juce::AudioIODevice& audioIoDevice);
-rust::Str getDeviceTypeName (const juce::AudioIODevice& audioIoDevice);
-rust::Vec<rust::f64> getAvailableSampleRates (juce::AudioIODevice& audioIoDevice);
-rust::Vec<size_t> getAvailableBufferSizes (juce::AudioIODevice& audioIoDevice);
-void open (juce::AudioIODevice& audioIoDevice, double sampleRate, size_t bufferSize);
-rust::i32 countActiveInputChannels (const juce::AudioIODevice& audioIoDevice);
-rust::i32 countActiveOutputChannels (const juce::AudioIODevice& audioIoDevice);
+class BoxDynAudioDevice
+{
+    using FatPtr = std::array<std::uintptr_t, 2>;
 
-} // namespace cxx_juce::audio_io_device
+public:
+    BoxDynAudioDevice (BoxDynAudioDevice&& other) noexcept;
+    ~BoxDynAudioDevice() noexcept;
+    using IsRelocatable = std::true_type;
+
+private:
+    FatPtr _repr;
+};
+
+std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device);
+} // namespace cxx_juce

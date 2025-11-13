@@ -1,12 +1,10 @@
 use {
     cxx_juce::{
-        juce_audio_devices::{
-            AudioDeviceManager, AudioIODevice, AudioIODeviceCallback, InputAudioSampleBuffer,
-            OutputAudioSampleBuffer,
-        },
-        Result, JUCE,
+        juce_audio_basics::AudioSampleBuffer,
+        juce_audio_devices::{AudioDevice, AudioDeviceCallback, AudioDeviceManager},
+        JuceError, JUCE,
     },
-    std::{iter::successors, thread::sleep, time::Duration},
+    std::{iter::successors, pin::Pin, thread::sleep, time::Duration},
 };
 
 #[derive(Debug, Default, Copy, Clone)]
@@ -32,8 +30,8 @@ struct AudioCallback {
     tones: Vec<ToneGenerator>,
 }
 
-impl AudioIODeviceCallback for AudioCallback {
-    fn about_to_start(&mut self, device: &mut dyn AudioIODevice) {
+impl AudioDeviceCallback for AudioCallback {
+    fn about_to_start(&mut self, device: &mut dyn AudioDevice) {
         const STARTING_FREQUENCY: f64 = 1024.0;
 
         let output_channels = device.output_channels() as usize;
@@ -60,12 +58,12 @@ impl AudioIODeviceCallback for AudioCallback {
 
     fn process_block(
         &mut self,
-        _input: &InputAudioSampleBuffer<'_>,
-        output: &mut OutputAudioSampleBuffer<'_>,
+        _input: &AudioSampleBuffer,
+        mut output: Pin<&mut AudioSampleBuffer>,
     ) {
-        for channel in 0..output.channels() {
-            let samples = &mut output[channel];
-            let tone = &mut self.tones[channel];
+        for channel in 0..output.get_num_channels() {
+            let samples = output.as_mut().get_write_slice(channel);
+            let tone = &mut self.tones[channel as usize];
 
             for (sample, tone) in samples.iter_mut().zip(tone) {
                 *sample = tone as f32;
@@ -76,7 +74,7 @@ impl AudioIODeviceCallback for AudioCallback {
     fn stopped(&mut self) {}
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<(), JuceError> {
     let juce = JUCE::initialise();
     let mut device_manager = AudioDeviceManager::new(&juce);
     device_manager.initialise(0, 2)?;
