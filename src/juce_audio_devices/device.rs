@@ -1,33 +1,25 @@
-use crate::juce_core::JuceString;
+use crate::{define_trait, JuceString};
 use cxx::UniquePtr;
 
 pub use juce::{AudioIODevice, BoxDynAudioDevice};
 
-#[cxx::bridge(namespace = "cxx_juce")]
+#[cxx::bridge(namespace = "juce")]
 mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
-        #[namespace = "juce"]
         pub type AudioIODevice;
+        type BigInteger = crate::juce_core::BigInteger;
+        type IntArray = crate::juce_core::IntArray;
+        type DoubleArray = crate::juce_core::DoubleArray;
+        type JuceString = crate::juce_core::JuceString;
 
+        #[namespace = "cxx_juce"]
         type BoxDynAudioDevice = Box<dyn super::AudioDevice>;
 
-        #[cxx_name = "wrapAudioDevice"]
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "wrap"]
         fn wrap_audio_device(device: BoxDynAudioDevice) -> UniquePtr<AudioIODevice>;
-
-        #[namespace = "juce"]
-        type BigInteger = crate::juce_core::BigInteger;
-
-        #[namespace = "juce"]
-        type IntArray = crate::juce_core::IntArray;
-
-        #[namespace = "juce"]
-        type DoubleArray = crate::juce_core::DoubleArray;
-
-        #[namespace = "juce"]
-        #[cxx_name = "String"]
-        type JuceString = crate::juce_core::JuceString;
 
         #[cxx_name = "getName"]
         pub fn get_name(self: &AudioIODevice) -> &JuceString;
@@ -62,34 +54,54 @@ mod juce {
             buffer_size: i32,
         ) -> JuceString;
 
-        #[rust_name = "close"]
         pub fn close(self: Pin<&mut AudioIODevice>);
     }
 
-    #[namespace = "cxx_juce::BoxDynAudioIODeviceImpl"]
+    #[namespace = "cxx_juce"]
     extern "Rust" {
+        type AudioDeviceImpl;
+
+        #[Self = "AudioDeviceImpl"]
         unsafe fn drop(device: *mut BoxDynAudioDevice);
 
+        #[Self = "AudioDeviceImpl"]
         fn name(device: &BoxDynAudioDevice) -> &str;
 
+        #[Self = "AudioDeviceImpl"]
         fn type_name(device: &BoxDynAudioDevice) -> &str;
 
+        #[Self = "AudioDeviceImpl"]
         fn sample_rate(device: &mut BoxDynAudioDevice) -> f64;
 
+        #[Self = "AudioDeviceImpl"]
         fn buffer_size(device: &mut BoxDynAudioDevice) -> i32;
 
+        #[Self = "AudioDeviceImpl"]
         fn available_sample_rates(device: &mut BoxDynAudioDevice) -> Vec<f64>;
 
+        #[Self = "AudioDeviceImpl"]
         fn available_buffer_sizes(device: &mut BoxDynAudioDevice) -> Vec<i32>;
 
+        #[Self = "AudioDeviceImpl"]
         fn open(device: &mut BoxDynAudioDevice, sample_rate: f64, buffer_size: i32) -> JuceString;
 
+        #[Self = "AudioDeviceImpl"]
         fn close(device: &mut BoxDynAudioDevice);
+
+        #[Self = "AudioDeviceImpl"]
+        fn input_channels(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn output_channels(device: &BoxDynAudioDevice) -> i32;
     }
 }
 
-/// A trait representing an audio device.
-pub trait AudioDevice {
+define_trait! {
+    /// A trait representing an audio device.
+    AudioDevice,
+    AudioDeviceImpl,
+    "cxx_juce::BoxDynAudioDevice",
+
     /// The name of the device.
     fn name(&self) -> &str;
 
@@ -125,45 +137,4 @@ impl From<Box<dyn AudioDevice>> for UniquePtr<AudioIODevice> {
     fn from(device: Box<dyn AudioDevice>) -> Self {
         juce::wrap_audio_device(device)
     }
-}
-
-unsafe impl cxx::ExternType for Box<dyn AudioDevice> {
-    type Id = cxx::type_id!("cxx_juce::BoxDynAudioDevice");
-    type Kind = cxx::kind::Trivial;
-}
-
-fn drop(device: *mut BoxDynAudioDevice) {
-    unsafe { std::ptr::drop_in_place(device) };
-}
-
-fn name(device: &BoxDynAudioDevice) -> &str {
-    device.name()
-}
-
-fn type_name(device: &BoxDynAudioDevice) -> &str {
-    device.type_name()
-}
-
-fn sample_rate(device: &mut BoxDynAudioDevice) -> f64 {
-    device.sample_rate()
-}
-
-fn buffer_size(device: &mut BoxDynAudioDevice) -> i32 {
-    device.buffer_size()
-}
-
-fn available_sample_rates(device: &mut BoxDynAudioDevice) -> Vec<f64> {
-    device.available_sample_rates()
-}
-
-fn available_buffer_sizes(device: &mut BoxDynAudioDevice) -> Vec<i32> {
-    device.available_buffer_sizes()
-}
-
-fn open(device: &mut BoxDynAudioDevice, sample_rate: f64, buffer_size: i32) -> JuceString {
-    device.open(sample_rate, buffer_size)
-}
-
-fn close(device: &mut BoxDynAudioDevice) {
-    device.close()
 }

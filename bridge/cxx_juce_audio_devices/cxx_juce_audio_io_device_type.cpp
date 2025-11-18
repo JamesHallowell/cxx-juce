@@ -5,30 +5,27 @@
 
 namespace cxx_juce
 {
-void DropBoxDynAudioIODeviceType::operator() (BoxDynAudioIODeviceType* deviceType) const
-{
-    BoxDynAudioIODeviceTypeImpl::drop (deviceType);
-}
+CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioDeviceType)
 
-std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODeviceType deviceType)
+std::unique_ptr<juce::AudioIODeviceType> wrap (BoxDynAudioDeviceType deviceType) noexcept
 {
     struct AudioIODeviceType : juce::AudioIODeviceType
     {
-        explicit AudioIODeviceType (BoxDynAudioIODeviceType deviceType)
+        explicit AudioIODeviceType (BoxDynAudioDeviceType deviceType)
             : juce::AudioIODeviceType (
-                  static_cast<std::string> (BoxDynAudioIODeviceTypeImpl::name (deviceType)))
+                  static_cast<std::string> (AudioDeviceTypeImpl::name (deviceType)))
             , _deviceType { std::move (deviceType) }
         {
         }
 
         void scanForDevices() override
         {
-            BoxDynAudioIODeviceTypeImpl::scan_for_devices (_deviceType);
+            AudioDeviceTypeImpl::scan_for_devices (_deviceType);
         }
 
         [[nodiscard]] juce::StringArray getDeviceNames (bool wantInputNames) const override
         {
-            const auto names = BoxDynAudioIODeviceTypeImpl::get_device_names (_deviceType, wantInputNames);
+            const auto names = wantInputNames ? AudioDeviceTypeImpl::input_devices (_deviceType) : AudioDeviceTypeImpl::output_devices (_deviceType);
 
             juce::StringArray stringArray;
             for (const auto& name : names)
@@ -59,7 +56,7 @@ std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODevic
         {
             try
             {
-                return BoxDynAudioIODeviceTypeImpl::create_device (_deviceType, inputDeviceName, outputDeviceName).release();
+                return AudioDeviceTypeImpl::create_device (_deviceType, inputDeviceName, outputDeviceName).release();
             }
             catch (const rust::Error&)
             {
@@ -67,7 +64,7 @@ std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODevic
             }
         }
 
-        BoxDynAudioIODeviceType _deviceType;
+        BoxDynAudioDeviceType _deviceType;
     };
 
     return std::make_unique<AudioIODeviceType> (std::move (deviceType));

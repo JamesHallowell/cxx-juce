@@ -1,15 +1,15 @@
 use crate::{
+    define_juce_type,
     juce_audio_devices::{
         AudioDeviceCallback, AudioDeviceType, AudioIODeviceCallback, AudioIODeviceType,
     },
     juce_core::{BigInteger, JuceString},
-    static_assert_offset_eq, static_assert_size_and_alignment, JuceError, JUCE,
+    JuceError, JUCE,
 };
 use cxx::UniquePtr;
 use slotmap::SlotMap;
 use std::{
     ffi::{c_double, c_int},
-    mem::ManuallyDrop,
     pin::Pin,
 };
 
@@ -25,8 +25,8 @@ pub struct AudioCallbackHandle {
 
 /// Manages the state of an audio device.
 pub struct AudioDeviceManager {
-    device_manager: cxx::UniquePtr<juce::AudioDeviceManager>,
-    callbacks: SlotMap<AudioCallbackKey, cxx::UniquePtr<AudioIODeviceCallback>>,
+    device_manager: UniquePtr<juce::AudioDeviceManager>,
+    callbacks: SlotMap<AudioCallbackKey, UniquePtr<AudioIODeviceCallback>>,
     _juce: JUCE,
 }
 
@@ -52,7 +52,7 @@ impl AudioDeviceManager {
                 output_channels,
                 std::ptr::null(),
                 false,
-                &JuceString::empty(),
+                &JuceString::default(),
                 std::ptr::null(),
             )
         };
@@ -174,78 +174,42 @@ impl AudioDeviceManager {
     }
 }
 
-/// The properties of an audio device.
-#[repr(C)]
-pub struct AudioDeviceSetup {
-    output_device_name: ManuallyDrop<JuceString>,
-    input_device_name: ManuallyDrop<JuceString>,
-    sample_rate: c_double,
-    buffer_size: c_int,
-    input_channels: ManuallyDrop<BigInteger>,
-    use_default_input_channels: bool,
-    output_channels: ManuallyDrop<BigInteger>,
-    use_default_output_channels: bool,
-}
-
-static_assert_size_and_alignment!(AudioDeviceSetup, juce::AudioDeviceSetupLayout);
-static_assert_offset_eq!(
+define_juce_type! {
+    /// The properties of an audio device.
     AudioDeviceSetup,
-    output_device_name,
-    juce::AudioDeviceSetupLayout::OutputDeviceNameOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    input_device_name,
-    juce::AudioDeviceSetupLayout::InputDeviceNameOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    sample_rate,
-    juce::AudioDeviceSetupLayout::SampleRateOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    buffer_size,
-    juce::AudioDeviceSetupLayout::BufferSizeOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    input_channels,
-    juce::AudioDeviceSetupLayout::InputChannelsOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    use_default_input_channels,
-    juce::AudioDeviceSetupLayout::UseDefaultInputChannelsOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    output_channels,
-    juce::AudioDeviceSetupLayout::OutputChannelsOffset
-);
-static_assert_offset_eq!(
-    AudioDeviceSetup,
-    use_default_output_channels,
-    juce::AudioDeviceSetupLayout::UseDefaultOutputChannelsOffset
-);
-
-impl Drop for AudioDeviceSetup {
-    fn drop(&mut self) {
-        juce::drop_audio_device_setup(self);
-    }
-}
-
-unsafe impl cxx::ExternType for AudioDeviceSetup {
-    type Id = cxx::type_id!("juce::AudioDeviceManager::AudioDeviceSetup");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl Send for AudioDeviceSetup {}
-
-impl Default for AudioDeviceSetup {
-    fn default() -> Self {
-        juce::construct_audio_device_setup()
-    }
+    fields = {
+        pub output_device_name: JuceString = {
+            offset = juce::AudioDeviceSetupLayout::OutputDeviceNameOffset,
+            with = with_output_device_name,
+        },
+        pub input_device_name: JuceString = {
+            offset = juce::AudioDeviceSetupLayout::InputDeviceNameOffset,
+            with = with_input_device_name,
+        },
+        pub sample_rate: c_double = {
+            offset = juce::AudioDeviceSetupLayout::SampleRateOffset,
+            with = with_sample_rate,
+        },
+        pub buffer_size: c_int = {
+            offset = juce::AudioDeviceSetupLayout::BufferSizeOffset,
+            with = with_buffer_size,
+        },
+        input_channels: BigInteger = {
+            offset = juce::AudioDeviceSetupLayout::InputChannelsOffset,
+        },
+        use_default_input_channels: bool = {
+            offset = juce::AudioDeviceSetupLayout::UseDefaultInputChannelsOffset,
+        },
+        output_channels: BigInteger = {
+            offset = juce::AudioDeviceSetupLayout::OutputChannelsOffset,
+        },
+        use_default_output_channels: bool = {
+            offset = juce::AudioDeviceSetupLayout::UseDefaultOutputChannelsOffset,
+        },
+    },
+    layout = juce::AudioDeviceSetupLayout,
+    cxx_name = "juce::AudioDeviceSetup",
+    default = juce::audio_device_setup_new,
 }
 
 /// The number of channels to use.
@@ -261,51 +225,6 @@ pub enum ChannelCount {
 unsafe impl Send for ChannelCount {}
 
 impl AudioDeviceSetup {
-    /// The name of the output device.
-    pub fn output_device_name(&self) -> &str {
-        self.output_device_name.as_ref()
-    }
-
-    /// Set the name of the output device.
-    pub fn with_output_device_name(mut self, name: impl AsRef<str>) -> Self {
-        self.output_device_name = ManuallyDrop::new(JuceString::new(name));
-        self
-    }
-
-    /// The name of the input device.
-    pub fn input_device_name(&self) -> &str {
-        self.input_device_name.as_ref()
-    }
-
-    /// Set the name of the input device.
-    pub fn with_input_device_name(mut self, name: impl AsRef<str>) -> Self {
-        self.input_device_name = ManuallyDrop::new(JuceString::new(name));
-        self
-    }
-
-    /// The sample rate in Hertz.
-    pub fn sample_rate(&self) -> f64 {
-        self.sample_rate
-    }
-
-    /// Set the sample rate in Hertz.
-    pub fn with_sample_rate(mut self, sample_rate: f64) -> Self {
-        self.sample_rate = sample_rate;
-        self
-    }
-
-    /// The buffer size.
-    pub fn buffer_size(&self) -> usize {
-        self.buffer_size as usize
-    }
-
-    /// The buffer size to use.
-    pub fn with_buffer_size(mut self, buffer_size: usize) -> Self {
-        self.buffer_size = buffer_size as c_int;
-        self
-    }
-
-    /// The number of input channels.
     pub fn input_channels(&self) -> ChannelCount {
         if self.use_default_input_channels {
             ChannelCount::Default
@@ -314,7 +233,6 @@ impl AudioDeviceSetup {
         }
     }
 
-    // Set the number of input channels.
     pub fn with_input_channels(mut self, channels: ChannelCount) -> Self {
         match channels {
             ChannelCount::Default => {
@@ -329,7 +247,6 @@ impl AudioDeviceSetup {
         self
     }
 
-    /// The number of output channels.
     pub fn output_channels(&self) -> ChannelCount {
         if self.use_default_output_channels {
             ChannelCount::Default
@@ -338,7 +255,6 @@ impl AudioDeviceSetup {
         }
     }
 
-    /// Set the number of output channels.
     pub fn with_output_channels(mut self, channels: ChannelCount) -> Self {
         match channels {
             ChannelCount::Default => {
@@ -354,7 +270,7 @@ impl AudioDeviceSetup {
     }
 }
 
-#[cxx::bridge(namespace = "cxx_juce")]
+#[cxx::bridge(namespace = "juce")]
 mod juce {
     enum AudioDeviceSetupLayout {
         Size = 128,
@@ -373,35 +289,22 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
-        #[namespace = "juce"]
-        #[cxx_name = "String"]
         type JuceString = crate::juce_core::JuceString;
-
-        #[namespace = "juce"]
         type AudioSampleBuffer = crate::juce_audio_basics::AudioSampleBuffer;
-
-        #[namespace = "juce"]
         type AudioIODeviceCallback = crate::juce_audio_devices::AudioIODeviceCallback;
-
-        #[namespace = "juce"]
         type AudioIODeviceType = crate::juce_audio_devices::AudioIODeviceType;
-
-        #[namespace = "juce::AudioDeviceManager"]
         type AudioDeviceSetup = super::AudioDeviceSetup;
 
+        #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]
-        pub fn construct_audio_device_setup() -> AudioDeviceSetup;
+        pub fn audio_device_setup_new() -> AudioDeviceSetup;
 
-        #[cxx_name = "drop"]
-        pub fn drop_audio_device_setup(value: &mut AudioDeviceSetup);
-
-        #[namespace = "juce"]
         pub type AudioDeviceManager;
 
+        #[namespace = "cxx_juce"]
         #[cxx_name = "makeUnique"]
         pub fn make_audio_device_manager() -> UniquePtr<AudioDeviceManager>;
 
-        #[namespace = "juce"]
         type XmlElement;
 
         #[must_use]
@@ -465,7 +368,6 @@ mod juce {
             treat_as_chosen_device: bool,
         );
 
-        #[namespace = "juce"]
         pub type AudioIODeviceTypeArray;
 
         pub fn size(self: &AudioIODeviceTypeArray) -> i32;
@@ -473,7 +375,6 @@ mod juce {
         #[rust_name = "get_unchecked"]
         pub fn getUnchecked(self: &AudioIODeviceTypeArray, index: i32) -> *mut AudioIODeviceType;
 
-        #[namespace = "juce"]
         type AudioIODevice = crate::juce_audio_devices::AudioIODevice;
     }
 }

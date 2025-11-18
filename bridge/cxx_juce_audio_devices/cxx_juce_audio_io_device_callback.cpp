@@ -5,12 +5,9 @@
 
 namespace cxx_juce
 {
-void DropBoxDynAudioDeviceCallback::operator() (BoxDynAudioDeviceCallback* callback) const
-{
-    BoxDynAudioDeviceCallbackImpl::drop (callback);
-}
+CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioDeviceCallback)
 
-std::unique_ptr<juce::AudioIODeviceCallback> wrapAudioDeviceCallback (BoxDynAudioDeviceCallback callback)
+std::unique_ptr<juce::AudioIODeviceCallback> wrap (BoxDynAudioDeviceCallback callback) noexcept
 {
     struct AudioIODeviceCallback : juce::AudioIODeviceCallback
     {
@@ -21,7 +18,7 @@ std::unique_ptr<juce::AudioIODeviceCallback> wrapAudioDeviceCallback (BoxDynAudi
 
         void audioDeviceAboutToStart (juce::AudioIODevice* device) override
         {
-            BoxDynAudioDeviceCallbackImpl::about_to_start (_callback, *device);
+            AudioDeviceCallbackImpl::about_to_start (_callback, *device);
         }
 
         void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
@@ -47,12 +44,12 @@ std::unique_ptr<juce::AudioIODeviceCallback> wrapAudioDeviceCallback (BoxDynAudi
                                                numSamples);
             }
 
-            BoxDynAudioDeviceCallbackImpl::process_block (_callback, inputBuffer, outputBuffer);
+            AudioDeviceCallbackImpl::process_block (_callback, inputBuffer, outputBuffer);
         }
 
         void audioDeviceStopped() override
         {
-            BoxDynAudioDeviceCallbackImpl::stopped (_callback);
+            AudioDeviceCallbackImpl::stopped (_callback);
         }
 
         BoxDynAudioDeviceCallback _callback;

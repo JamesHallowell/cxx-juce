@@ -1,28 +1,14 @@
-use crate::{define_juce_type, static_assert_size_and_alignment};
+use crate::define_juce_type;
 
-define_juce_type!(
+define_juce_type! {
     JuceString,
-    size = 8,
-    align = 8,
-    check_with = juce::StringLayout
-);
-
-unsafe impl cxx::ExternType for JuceString {
-    type Id = cxx::type_id!("juce::String");
-    type Kind = cxx::kind::Trivial;
-}
-
-impl Default for JuceString {
-    fn default() -> Self {
-        Self::empty()
-    }
+    layout = juce::StringLayout,
+    cxx_name = "juce::JuceString",
+    drop = juce::string_drop,
+    default = juce::string_new,
 }
 
 impl JuceString {
-    pub fn empty() -> JuceString {
-        juce::construct_string()
-    }
-
     pub fn new(str: impl AsRef<str>) -> Self {
         let str = str.as_ref();
         let data = str.as_ptr().cast();
@@ -30,12 +16,6 @@ impl JuceString {
             .try_into()
             .map(|len| unsafe { Self::from_utf8(data, len) })
             .unwrap_or_default()
-    }
-}
-
-impl Drop for JuceString {
-    fn drop(&mut self) {
-        juce::drop_string(self);
     }
 }
 
@@ -51,6 +31,12 @@ impl AsRef<str> for JuceString {
 impl From<JuceString> for String {
     fn from(value: JuceString) -> Self {
         value.as_ref().to_string()
+    }
+}
+
+impl From<&str> for JuceString {
+    fn from(value: &str) -> Self {
+        JuceString::new(value)
     }
 }
 
@@ -78,18 +64,17 @@ impl PartialEq<str> for JuceString {
     }
 }
 
-define_juce_type!(
-    CharPointerUTF8,
-    size = 8,
-    align = 8,
-    check_with = juce::CharPointerUTF8Layout
-);
-
-unsafe impl cxx::ExternType for CharPointerUTF8 {
-    type Id = cxx::type_id!("juce::CharPointer_UTF8");
-    type Kind = cxx::kind::Trivial;
+impl PartialEq<&str> for JuceString {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_ref() == *other
+    }
 }
-static_assert_size_and_alignment!(CharPointerUTF8, juce::CharPointerUTF8Layout);
+
+define_juce_type! {
+    CharPointerUTF8,
+    layout = juce::CharPointer_UTF8Layout,
+    cxx_name = "juce::CharPointer_UTF8",
+}
 
 #[cxx::bridge(namespace = "juce")]
 mod juce {
@@ -98,7 +83,7 @@ mod juce {
         Alignment = 8,
     }
 
-    enum CharPointerUTF8Layout {
+    enum CharPointer_UTF8Layout {
         Size = 8,
         Alignment = 8,
     }
@@ -107,16 +92,15 @@ mod juce {
         include!("cxx_juce.h");
         include!("cxx_juce_core/cxx_juce_core.h");
 
-        #[cxx_name = "String"]
         type JuceString = super::JuceString;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_string"]
-        fn construct() -> JuceString;
+        #[cxx_name = "construct"]
+        fn string_new() -> JuceString;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "drop_string"]
-        fn drop(value: &mut JuceString);
+        #[cxx_name = "drop"]
+        fn string_drop(self_: &mut JuceString);
 
         #[cxx_name = "fromUTF8"]
         #[Self = "JuceString"]
@@ -155,7 +139,7 @@ mod test {
 
     #[test]
     fn compare_strings() {
-        assert_eq!(JuceString::empty(), JuceString::empty());
+        assert_eq!(JuceString::default(), JuceString::default());
         assert_eq!(JuceString::new("Hello"), JuceString::new("Hello"));
 
         assert_ne!(JuceString::new("World"), JuceString::new("Hello"));

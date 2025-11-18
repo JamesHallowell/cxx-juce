@@ -1,11 +1,15 @@
 #pragma once
 
 #include <juce_audio_devices/juce_audio_devices.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 
+#include <concepts>
+
 namespace juce
 {
+using JuceString = String;
 using AudioIODeviceTypeArray = OwnedArray<AudioIODeviceType>;
 void initialiseNSApplication();
 } // namespace juce
@@ -54,6 +58,24 @@ template <typename T>
 auto eq (const T& a, const T& b)
 {
     return a == b;
+}
+
+template <typename T, typename I>
+auto index (const T& container, I index)
+{
+    return container[index];
+}
+
+template <typename T, typename U>
+requires std::derived_from<T, U> const U& derivedCast (const T& value)
+{
+    return value;
+}
+
+template <typename T, typename U>
+requires std::derived_from<T, U> U& derivedCastMut (T& value)
+{
+    return value;
 }
 
 } // namespace cxx_juce

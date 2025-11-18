@@ -6,19 +6,16 @@
 namespace cxx_juce
 {
 
-void DropBoxDynAudioDevice::operator() (BoxDynAudioDevice* device) const
-{
-    BoxDynAudioIODeviceImpl::drop (device);
-}
+CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioDevice)
 
-std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)
+std::unique_ptr<juce::AudioIODevice> wrap (BoxDynAudioDevice device) noexcept
 {
     struct AudioIODevice : juce::AudioIODevice
     {
         explicit AudioIODevice (BoxDynAudioDevice device)
             : juce::AudioIODevice (
-                  static_cast<std::string> (BoxDynAudioIODeviceImpl::name (device)),
-                  static_cast<std::string> (BoxDynAudioIODeviceImpl::type_name (device)))
+                  static_cast<std::string> (AudioDeviceImpl::name (device)),
+                  static_cast<std::string> (AudioDeviceImpl::type_name (device)))
             , _device { std::move (device) }
         {
         }
@@ -36,7 +33,7 @@ std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)
         juce::Array<double> getAvailableSampleRates() override
         {
             juce::Array<double> sampleRates;
-            for (auto sampleRate : BoxDynAudioIODeviceImpl::available_sample_rates (_device))
+            for (auto sampleRate : AudioDeviceImpl::available_sample_rates (_device))
             {
                 sampleRates.add (sampleRate);
             }
@@ -46,7 +43,7 @@ std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)
         juce::Array<int> getAvailableBufferSizes() override
         {
             juce::Array<int> bufferSizes;
-            for (auto bufferSize : BoxDynAudioIODeviceImpl::available_buffer_sizes (_device))
+            for (auto bufferSize : AudioDeviceImpl::available_buffer_sizes (_device))
             {
                 bufferSizes.add (bufferSize);
             }
@@ -63,12 +60,12 @@ std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)
                            double sampleRate,
                            int bufferSize) override
         {
-            return BoxDynAudioIODeviceImpl::open (_device, sampleRate, bufferSize);
+            return AudioDeviceImpl::open (_device, sampleRate, bufferSize);
         }
 
         void close() override
         {
-            BoxDynAudioIODeviceImpl::close (_device);
+            AudioDeviceImpl::close (_device);
         }
 
         bool isOpen() override
@@ -96,12 +93,12 @@ std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)
 
         int getCurrentBufferSizeSamples() override
         {
-            return BoxDynAudioIODeviceImpl::buffer_size (_device);
+            return AudioDeviceImpl::buffer_size (_device);
         }
 
         double getCurrentSampleRate() override
         {
-            return BoxDynAudioIODeviceImpl::sample_rate (_device);
+            return AudioDeviceImpl::sample_rate (_device);
         }
 
         int getCurrentBitDepth() override
@@ -111,12 +108,12 @@ std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)
 
         [[nodiscard]] juce::BigInteger getActiveOutputChannels() const override
         {
-            return {};
+            return AudioDeviceImpl::output_channels (_device);
         }
 
         [[nodiscard]] juce::BigInteger getActiveInputChannels() const override
         {
-            return {};
+            return AudioDeviceImpl::input_channels (_device);
         }
 
         int getOutputLatencyInSamples() override
