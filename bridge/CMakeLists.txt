@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 project(cxx-juce VERSION 0.1)
 
-set(CXX_JUCE_BINDINGS_DIR "" CACHE PATH "Path to the bindings directory")
+set(CXX_JUCE_BINDINGS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../target/cxxbridge" CACHE PATH "Path to the bindings directory")
+set(CXX_JUCE_BRIDGE_FILES "" CACHE STRING "A list of bridge files to build")
+
 set(CXX_JUCE_USE_ASIO OFF CACHE BOOL "Use ASIO")
 set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
 set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
@@ -36,31 +38,27 @@ message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
 target_include_directories(cxx-juce
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CXX_JUCE_BINDINGS_DIR}/crate
-        ${CXX_JUCE_BINDINGS_DIR}/include
-        ${CXX_JUCE_BINDINGS_DIR}/sources
+        ${CXX_JUCE_BINDINGS_DIR}
 )
 
 target_sources(cxx-juce
     PRIVATE
         cxx_juce.h
-        cxx_juce.cpp
-        cxx_juce_bindings.h
-        cxx_juce_bindings.cpp
-        cxx_juce_audio_basics/cxx_juce_iir_filter.h
-        cxx_juce_audio_basics/cxx_juce_iir_filter.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_callback_wrapper.h
-        cxx_juce_audio_devices/cxx_juce_audio_callback_wrapper.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_device_setup.h
-        cxx_juce_audio_devices/cxx_juce_audio_device_setup.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_device_manager.h
-        cxx_juce_audio_devices/cxx_juce_audio_device_manager.cpp
-        cxx_juce_audio_devices/cxx_juce_system_audio_volume.h
-        cxx_juce_audio_devices/cxx_juce_system_audio_volume.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.h
-        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_io_device.h
+        cxx_juce_audio_basics/cxx_juce_audio_basics.cpp
+        cxx_juce_audio_basics/cxx_juce_audio_basics.h
+        cxx_juce_audio_devices/cxx_juce_audio_devices.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_devices.h
         cxx_juce_audio_devices/cxx_juce_audio_io_device.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_io_device.h
+        cxx_juce_audio_devices/cxx_juce_audio_io_device_callback.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_io_device_callback.h
+        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.cpp
+        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.h
+        cxx_juce_core/cxx_juce_core.cpp
+        cxx_juce_core/cxx_juce_core.h
+        cxx_juce_utils.h
+        ${CXX_JUCE_BRIDGE_FILES}
+
 )
 
 target_link_libraries(cxx-juce
@@ -85,4 +83,10 @@ if (CXX_JUCE_USE_ASIO)
     PRIVATE
         ${CXX_JUCE_ASIO_SDK_DIR}/common
     )
+endif()
+
+if (MSVC)
+    set_source_files_properties(${CXX_JUCE_BRIDGE_FILES} PROPERTIES COMPILE_FLAGS "/w")
+else()
+    set_source_files_properties(${CXX_JUCE_BRIDGE_FILES} PROPERTIES COMPILE_FLAGS "-w")
 endif()

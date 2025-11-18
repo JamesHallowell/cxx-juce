@@ -19,12 +19,12 @@ fn main() {
     delay();
 
     println!("Muting 🔇");
-    SystemAudioVolume::mute();
+    SystemAudioVolume::set_muted(true);
 
     delay();
 
     println!("Unmuting 🔊");
-    SystemAudioVolume::unmute();
+    SystemAudioVolume::set_muted(false);
 
     delay();
 

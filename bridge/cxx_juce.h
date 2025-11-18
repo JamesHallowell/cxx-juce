@@ -1,34 +1,65 @@
 #pragma once
 
-#include "cxx_juce_audio_basics/cxx_juce_iir_filter.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_callback_wrapper.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_device_manager.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_device_setup.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_io_device.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_io_device_type.h"
-#include "cxx_juce_audio_devices/cxx_juce_system_audio_volume.h"
-
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
-#include <rust/cxx.h>
 
 namespace juce
 {
-using AudioIODeviceTypeArray = OwnedArray<juce::AudioIODeviceType>;
+using AudioIODeviceTypeArray = OwnedArray<AudioIODeviceType>;
 void initialiseNSApplication();
 } // namespace juce
+
+namespace cxx_juce
+{
+class AudioIODeviceWrapper;
+}
+
+#include "cxx_juce_audio_basics/cxx_juce_audio_basics.h"
+#include "cxx_juce_audio_devices/cxx_juce_audio_devices.h"
+#include "cxx_juce_core/cxx_juce_core.h"
+
+#include <memory>
+#include <rust/cxx.h>
 
 namespace cxx_juce
 {
 struct BoxedAudioIODeviceCallback;
 struct BoxedAudioIODeviceType;
 
-rust::String juceVersion();
+inline rust::Str toStr (const juce::String& string)
+{
+    return { string.toRawUTF8(), string.getNumBytesAsUTF8() };
+}
 
-void initialiseJuce();
-void shutdownJuce();
+template <typename T, typename... Args>
+T construct (Args... args)
+{
+    return T { std::forward<Args> (args)... };
+}
 
-rust::Str toStr (const juce::String& string);
+template <typename T, typename... Args>
+std::unique_ptr<T> makeUnique (Args... args)
+{
+    return std::make_unique<T> (std::forward<Args> (args)...);
+}
+
+template <typename T>
+void drop (T& value)
+{
+    value.~T();
+}
+
+template <typename T>
+auto eq (const T& a, const T& b)
+{
+    return a == b;
+}
+
+template <typename T>
+std::unique_ptr<T> forceUniquePtrTarget ()
+{
+    return std::unique_ptr<T>{};
+}
 
 } // namespace cxx_juce

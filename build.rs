@@ -5,13 +5,37 @@ fn main() {
         return;
     }
 
-    let _ = cxx_build::bridge("src/lib.rs");
+    let bridges = [
+        "src/lib.rs",
+        "src/utils.rs",
+        "src/juce_core/string.rs",
+        "src/juce_core/bigint.rs",
+        "src/juce_core/array.rs",
+        "src/juce_core/system.rs",
+        "src/juce_audio_basics/filters.rs",
+        "src/juce_audio_basics/buffer.rs",
+        "src/juce_audio_devices/mod.rs",
+        "src/juce_audio_devices/device_manager.rs",
+        "src/juce_audio_devices/device.rs",
+        "src/juce_audio_devices/device_type.rs",
+        "src/juce_audio_devices/device_callback.rs",
+    ];
+    for bridge in bridges.iter() {
+        let _ = cxx_build::bridge(bridge);
+        println!("cargo:rerun-if-changed={bridge}");
+    }
 
     let mut cmake = cmake::Config::new("bridge");
     cmake.build_target("cxx-juce");
 
-    let out_dir = env::var("OUT_DIR").unwrap();
-    cmake.define("CXX_JUCE_BINDINGS_DIR", format!("{out_dir}/cxxbridge"));
+    cmake.define(
+        "CXX_JUCE_BRIDGE_FILES",
+        bridges
+            .iter()
+            .map(|bridge| format!("../target/cxxbridge/cxx-juce/{}.cc", bridge))
+            .collect::<Vec<_>>()
+            .join(";"),
+    );
 
     if cfg!(feature = "asio") {
         cmake.define("CXX_JUCE_USE_ASIO", "ON");
@@ -35,7 +59,6 @@ fn main() {
 
     let destination = cmake.build();
 
-    println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=bridge");
     println!("cargo:rerun-if-env-changed=CXX_JUCE_ASIO_SDK_DIR");
 

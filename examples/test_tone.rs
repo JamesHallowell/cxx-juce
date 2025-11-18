@@ -1,12 +1,12 @@
 use {
     cxx_juce::{
-        juce_audio_devices::{AudioDeviceManager, AudioIODevice},
-        Result, JUCE,
+        juce_audio_devices::{AudioDevice, AudioDeviceManager},
+        JuceError, JUCE,
     },
     std::{thread::sleep, time::Duration},
 };
 
-fn main() -> Result<()> {
+fn main() -> Result<(), JuceError> {
     let juce = JUCE::initialise();
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.initialise(0, 2)?;
