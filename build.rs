@@ -28,11 +28,12 @@ fn main() {
     let mut cmake = cmake::Config::new("bridge");
     cmake.build_target("cxx-juce");
 
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     cmake.define(
         "CXX_JUCE_BRIDGE_FILES",
         bridges
             .iter()
-            .map(|bridge| format!("../target/cxxbridge/cxx-juce/{}.cc", bridge))
+            .map(|bridge| format!("{}/target/cxxbridge/cxx-juce/{}.cc", manifest_dir, bridge))
             .collect::<Vec<_>>()
             .join(";"),
     );
