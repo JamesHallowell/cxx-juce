@@ -1,4 +1,5 @@
 use crate::define_juce_type;
+use std::fmt::Formatter;
 
 macro_rules! define_array {
     (
@@ -46,6 +47,12 @@ macro_rules! define_array {
                     .try_into()
                     .map(|size| unsafe { std::slice::from_raw_parts(data, size) })
                     .unwrap_or_default()
+            }
+        }
+
+        impl std::fmt::Debug for $name {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:?}", self.as_ref())
             }
         }
     };

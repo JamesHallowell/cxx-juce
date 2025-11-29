@@ -2,21 +2,17 @@
 
 #include <juce_audio_devices/juce_audio_devices.h>
 
+#include <cxx_juce_utils.h>
+
 namespace cxx_juce
 {
 
-class BoxDynAudioDeviceCallback
+struct DropBoxDynAudioDeviceCallback
 {
-    using FatPtr = std::array<std::uintptr_t, 2>;
-
-public:
-    BoxDynAudioDeviceCallback (BoxDynAudioDeviceCallback&& other) noexcept;
-    ~BoxDynAudioDeviceCallback() noexcept;
-    using IsRelocatable = std::true_type;
-
-private:
-    FatPtr _repr;
+    void operator() (FatPtr<DropBoxDynAudioDeviceCallback>* callback) const;
 };
+
+using BoxDynAudioDeviceCallback = FatPtr<DropBoxDynAudioDeviceCallback>;
 
 std::unique_ptr<juce::AudioIODeviceCallback> wrapAudioDeviceCallback (BoxDynAudioDeviceCallback callback);
 

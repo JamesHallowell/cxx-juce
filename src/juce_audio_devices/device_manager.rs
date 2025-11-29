@@ -1,14 +1,17 @@
 use crate::{
     juce_audio_devices::{
-        AudioDevice, AudioDeviceCallback, AudioDeviceType, AudioIODeviceCallback, AudioIODeviceType,
+        AudioDeviceCallback, AudioDeviceType, AudioIODeviceCallback, AudioIODeviceType,
     },
     juce_core::{BigInteger, JuceString},
     static_assert_offset_eq, static_assert_size_and_alignment, JuceError, JUCE,
 };
+use cxx::UniquePtr;
 use slotmap::SlotMap;
-use std::ffi::{c_double, c_int};
-use std::mem::ManuallyDrop;
-use std::pin::Pin;
+use std::{
+    ffi::{c_double, c_int},
+    mem::ManuallyDrop,
+    pin::Pin,
+};
 
 slotmap::new_key_type! {
     struct AudioCallbackKey;
@@ -90,7 +93,7 @@ impl AudioDeviceManager {
     }
 
     /// Get the available device types.
-    pub fn device_types(&mut self) -> Vec<impl AudioDeviceType + '_> {
+    pub fn device_types(&mut self) -> Vec<Pin<&mut AudioIODeviceType>> {
         let available_device_types = self.device_manager.pin_mut().get_available_device_types();
 
         (0..available_device_types.size())
@@ -108,14 +111,13 @@ impl AudioDeviceManager {
     }
 
     /// Get the current device type.
-    pub fn current_device_type(&self) -> Option<impl AudioDeviceType + '_> {
+    pub fn current_device_type(&mut self) -> Option<Pin<&mut AudioIODeviceType>> {
         let device_type = self.device_manager.get_current_device_type_object();
-
         unsafe { device_type.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
     }
 
     /// Get the current [`AudioDevice`].
-    pub fn current_device(&mut self) -> Option<impl AudioDevice + '_> {
+    pub fn current_device(&mut self) -> Option<Pin<&mut juce::AudioIODevice>> {
         let current_device = self.device_manager.pin_mut().get_current_audio_device();
 
         unsafe { current_device.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
@@ -126,7 +128,8 @@ impl AudioDeviceManager {
         &mut self,
         callback: impl AudioDeviceCallback + 'static,
     ) -> AudioCallbackHandle {
-        let callback = AudioIODeviceCallback::wrap(Box::new(callback));
+        let callback: Box<dyn AudioDeviceCallback> = Box::new(callback);
+        let callback: UniquePtr<_> = callback.into();
 
         unsafe {
             self.device_manager
@@ -152,11 +155,11 @@ impl AudioDeviceManager {
 
     /// Registers an audio device type.
     pub fn add_audio_device_type(&mut self, device_type: impl AudioDeviceType + 'static) {
-        let device_type = AudioIODeviceType::wrap(Box::new(device_type));
+        let device_type: Box<dyn AudioDeviceType> = Box::new(device_type);
 
         self.device_manager
             .pin_mut()
-            .add_audio_device_type(device_type);
+            .add_audio_device_type(device_type.into());
     }
 
     /// Set the current audio device type to use.

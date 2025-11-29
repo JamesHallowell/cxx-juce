@@ -1,6 +1,8 @@
+use cxx::UniquePtr;
 use cxx_juce::{
     juce_audio_devices::{
-        AudioDevice, AudioDeviceManager, AudioDeviceSetup, AudioDeviceType, ChannelCount,
+        AudioDevice, AudioDeviceManager, AudioDeviceSetup, AudioDeviceType, AudioIODevice,
+        ChannelCount,
     },
     juce_core::JuceString,
     JUCE,
@@ -41,13 +43,15 @@ impl AudioDeviceType for MockAudioDeviceType {
         &mut self,
         input_device_name: &str,
         output_device_name: &str,
-    ) -> Option<Box<dyn AudioDevice>> {
-        Some(Box::new(MockAudioDevice {
+    ) -> Option<UniquePtr<AudioIODevice>> {
+        let device: Box<dyn AudioDevice> = Box::new(MockAudioDevice {
             name: format!("{} / {}", input_device_name, output_device_name),
             type_name: self.name(),
             sample_rate: 44100.0,
             buffer_size: 128,
-        }))
+        });
+
+        Some(device.into())
     }
 }
 
@@ -109,24 +113,33 @@ fn can_query_audio_device_types() {
 
     let mut device_type = audio_device_manager.current_device_type().unwrap();
 
-    assert_eq!(device_type.name(), "Test");
+    assert_eq!(device_type.get_type_name(), "Test");
 
-    device_type.scan_for_devices();
+    device_type.as_mut().scan_for_devices();
 
     assert_eq!(
-        device_type.input_devices(),
+        device_type
+            .as_mut()
+            .get_input_device_names()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>(),
         ["Microphone", "Audio Interface", "Headset"]
             .into_iter()
             .map(String::from)
-            .collect::<Vec<String>>()
+            .collect::<Vec<_>>()
     );
 
     assert_eq!(
-        device_type.output_devices(),
+        device_type
+            .get_output_device_names()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>(),
         ["Speakers", "Headphones"]
             .into_iter()
             .map(String::from)
-            .collect::<Vec<String>>()
+            .collect::<Vec<_>>()
     );
 }
 
@@ -178,8 +191,8 @@ fn can_create_devices() {
         .create_device("Microphone", "Speakers")
         .expect("failed to create device");
 
-    assert_eq!(device.name(), "Microphone / Speakers");
-    assert_eq!(device.type_name(), "Test");
+    assert_eq!(device.get_name(), "Microphone / Speakers");
+    assert_eq!(device.get_type_name(), "Test");
 }
 
 #[test]

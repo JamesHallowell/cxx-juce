@@ -54,15 +54,27 @@ impl From<JuceString> for String {
     }
 }
 
-impl std::fmt::Debug for JuceString {
+impl std::fmt::Display for JuceString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_ref())
+    }
+}
+
+impl std::fmt::Debug for JuceString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.as_ref())
     }
 }
 
 impl PartialEq for JuceString {
     fn eq(&self, other: &Self) -> bool {
         juce::eq_string(self, other)
+    }
+}
+
+impl PartialEq<str> for JuceString {
+    fn eq(&self, other: &str) -> bool {
+        self.as_ref() == other
     }
 }
 

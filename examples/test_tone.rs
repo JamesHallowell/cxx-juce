@@ -1,8 +1,5 @@
 use {
-    cxx_juce::{
-        juce_audio_devices::{AudioDevice, AudioDeviceManager},
-        JuceError, JUCE,
-    },
+    cxx_juce::{juce_audio_devices::AudioDeviceManager, JuceError, JUCE},
     std::{thread::sleep, time::Duration},
 };
 
@@ -16,17 +13,20 @@ fn main() -> Result<(), JuceError> {
             .current_device()
             .expect("default device not found");
 
-        println!("Name: {}", device.name());
-        println!("Type: {}", device.type_name());
-        println!("Sample rate: {}", device.sample_rate());
-        println!("Buffer size: {}", device.buffer_size());
+        println!("Name: {}", device.get_name());
+        println!("Type: {}", device.get_type_name());
+        println!("Sample rate: {}", device.as_mut().get_current_sample_rate());
+        println!(
+            "Buffer size: {}",
+            device.as_mut().get_current_buffer_size_samples()
+        );
         println!(
             "Available sample rates: {:?}",
-            device.available_sample_rates()
+            device.as_mut().get_available_sample_rates()
         );
         println!(
             "Available buffer sizes: {:?}",
-            device.available_buffer_sizes()
+            device.as_mut().get_available_buffer_sizes()
         );
     }
 

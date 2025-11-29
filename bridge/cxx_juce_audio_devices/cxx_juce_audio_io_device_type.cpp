@@ -5,18 +5,9 @@
 
 namespace cxx_juce
 {
-BoxDynAudioIODeviceType::BoxDynAudioIODeviceType (BoxDynAudioIODeviceType&& other) noexcept
-    : _repr { other._repr }
+void DropBoxDynAudioIODeviceType::operator() (BoxDynAudioIODeviceType* deviceType) const
 {
-    other._repr = { 0, 0 };
-}
-
-BoxDynAudioIODeviceType::~BoxDynAudioIODeviceType() noexcept
-{
-    if (_repr != FatPtr { 0, 0 })
-    {
-        BoxDynAudioIODeviceTypeImpl::drop (this);
-    }
+    BoxDynAudioIODeviceTypeImpl::drop (deviceType);
 }
 
 std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODeviceType deviceType)
@@ -68,8 +59,7 @@ std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODevic
         {
             try
             {
-                auto box = BoxDynAudioIODeviceTypeImpl::create_device (_deviceType, inputDeviceName, outputDeviceName);
-                return wrapAudioDevice (std::move (box)).release();
+                return BoxDynAudioIODeviceTypeImpl::create_device (_deviceType, inputDeviceName, outputDeviceName).release();
             }
             catch (const rust::Error&)
             {

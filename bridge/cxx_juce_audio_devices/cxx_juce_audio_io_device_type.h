@@ -2,21 +2,17 @@
 
 #include <juce_audio_devices/juce_audio_devices.h>
 
+#include <cxx_juce_utils.h>
+
 namespace cxx_juce
 {
 
-class BoxDynAudioIODeviceType
+struct DropBoxDynAudioIODeviceType
 {
-    using FatPtr = std::array<std::uintptr_t, 2>;
-
-public:
-    BoxDynAudioIODeviceType (BoxDynAudioIODeviceType&& other) noexcept;
-    ~BoxDynAudioIODeviceType() noexcept;
-    using IsRelocatable = std::true_type;
-
-private:
-    FatPtr _repr;
+    void operator() (FatPtr<DropBoxDynAudioIODeviceType>* deviceType) const;
 };
+
+using BoxDynAudioIODeviceType = FatPtr<DropBoxDynAudioIODeviceType>;
 
 std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODeviceType deviceType);
 } // namespace cxx_juce
