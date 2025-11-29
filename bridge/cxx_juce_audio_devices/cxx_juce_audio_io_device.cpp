@@ -6,18 +6,9 @@
 namespace cxx_juce
 {
 
-BoxDynAudioDevice::BoxDynAudioDevice (BoxDynAudioDevice&& other) noexcept
-    : _repr { other._repr }
+void DropBoxDynAudioDevice::operator() (BoxDynAudioDevice* device) const
 {
-    other._repr = { 0, 0 };
-}
-
-BoxDynAudioDevice::~BoxDynAudioDevice() noexcept
-{
-    if (_repr != FatPtr { 0, 0 })
-    {
-        BoxDynAudioIODeviceImpl::drop (this);
-    }
+    BoxDynAudioIODeviceImpl::drop (device);
 }
 
 std::unique_ptr<juce::AudioIODevice> wrapAudioDevice (BoxDynAudioDevice device)

@@ -1,80 +1,36 @@
-use crate::{juce_audio_devices::AudioDevice, juce_core::JuceString};
+use crate::{
+    juce_audio_devices::AudioIODevice,
+    juce_core::{JuceString, StringArray},
+};
 use cxx::UniquePtr;
 use std::pin::Pin;
-
-/// A trait representing a type of audio driver (e.g. CoreAudio, ASIO, etc.).
-pub trait AudioDeviceType {
-    /// The name of the type of driver.
-    fn name(&self) -> String;
-
-    /// Refreshes the drivers cached list of known devices.
-    fn scan_for_devices(&mut self);
-
-    /// Returns a list of known input devices.
-    fn input_devices(&self) -> Vec<String>;
-
-    /// Returns a list of the known output devices.
-    fn output_devices(&self) -> Vec<String>;
-
-    /// Create an [`AudioDevice`].
-    fn create_device(
-        &mut self,
-        input_device_name: &str,
-        output_device_name: &str,
-    ) -> Option<Box<dyn AudioDevice>>;
-}
-
-impl AudioDeviceType for Pin<&mut AudioIODeviceType> {
-    fn name(&self) -> String {
-        self.get_type_name().as_ref().to_string()
-    }
-
-    fn scan_for_devices(&mut self) {
-        AudioIODeviceType::scan_for_devices(self.as_mut())
-    }
-
-    fn input_devices(&self) -> Vec<String> {
-        self.get_device_names(true)
-            .into_iter()
-            .map(|s| s.as_ref().to_string())
-            .collect()
-    }
-
-    fn output_devices(&self) -> Vec<String> {
-        self.get_device_names(false)
-            .into_iter()
-            .map(|s| s.as_ref().to_string())
-            .collect()
-    }
-
-    fn create_device(
-        &mut self,
-        input_device_name: &str,
-        output_device_name: &str,
-    ) -> Option<Box<dyn AudioDevice>> {
-        let device = self.as_mut().create_device(
-            &JuceString::new(input_device_name),
-            &JuceString::new(output_device_name),
-        );
-
-        if device.is_null() {
-            None
-        } else {
-            Some(Box::new(unsafe { UniquePtr::from_raw(device) }))
-        }
-    }
-}
-
-unsafe impl cxx::ExternType for Box<dyn AudioDeviceType> {
-    type Id = cxx::type_id!("cxx_juce::BoxDynAudioIODeviceType");
-    type Kind = cxx::kind::Trivial;
-}
 
 pub use juce::{AudioIODeviceType, BoxDynAudioIODeviceType};
 
 impl AudioIODeviceType {
-    pub fn wrap(device_type: Box<dyn AudioDeviceType>) -> UniquePtr<Self> {
-        juce::wrap_audio_device_type(device_type)
+    pub fn get_input_device_names(&self) -> StringArray {
+        self.get_device_names(true)
+    }
+
+    pub fn get_output_device_names(&self) -> StringArray {
+        self.get_device_names(false)
+    }
+
+    pub fn create_device(
+        self: Pin<&mut Self>,
+        input_device_name: &str,
+        output_device_name: &str,
+    ) -> Option<UniquePtr<AudioIODevice>> {
+        let input_device_name = JuceString::new(input_device_name);
+        let output_device_name = JuceString::new(output_device_name);
+
+        let device_ptr = self.create_device_raw(&input_device_name, &output_device_name);
+
+        if device_ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { UniquePtr::from_raw(device_ptr) })
+        }
     }
 }
 
@@ -107,7 +63,7 @@ mod juce {
         fn get_device_names(self: &AudioIODeviceType, inputs: bool) -> StringArray;
 
         #[cxx_name = "createDevice"]
-        fn create_device(
+        fn create_device_raw(
             self: Pin<&mut AudioIODeviceType>,
             input_device_name: &JuceString,
             output_device_name: &JuceString,
@@ -126,7 +82,6 @@ mod juce {
     extern "Rust" {
         unsafe fn drop(device: *mut BoxDynAudioIODeviceType);
 
-        #[must_use]
         fn name(device_type: &BoxDynAudioIODeviceType) -> String;
 
         fn scan_for_devices(device_type: &mut BoxDynAudioIODeviceType);
@@ -137,7 +92,40 @@ mod juce {
             device_type: &mut BoxDynAudioIODeviceType,
             input_device_name: &JuceString,
             output_device_name: &JuceString,
-        ) -> Result<BoxDynAudioDevice>;
+        ) -> Result<UniquePtr<AudioIODevice>>;
+    }
+}
+
+/// A trait representing a type of audio driver (e.g. CoreAudio, ASIO, etc.).
+pub trait AudioDeviceType {
+    /// The name of the type of driver.
+    fn name(&self) -> String;
+
+    /// Refreshes the drivers cached list of known devices.
+    fn scan_for_devices(&mut self);
+
+    /// Returns a list of known input devices.
+    fn input_devices(&self) -> Vec<String>;
+
+    /// Returns a list of the known output devices.
+    fn output_devices(&self) -> Vec<String>;
+
+    /// Create an [`AudioDevice`].
+    fn create_device(
+        &mut self,
+        input_device_name: &str,
+        output_device_name: &str,
+    ) -> Option<UniquePtr<AudioIODevice>>;
+}
+
+unsafe impl cxx::ExternType for Box<dyn AudioDeviceType> {
+    type Id = cxx::type_id!("cxx_juce::BoxDynAudioIODeviceType");
+    type Kind = cxx::kind::Trivial;
+}
+
+impl From<Box<dyn AudioDeviceType>> for UniquePtr<AudioIODeviceType> {
+    fn from(audio_device: Box<dyn AudioDeviceType>) -> Self {
+        juce::wrap_audio_device_type(audio_device)
     }
 }
 
@@ -165,7 +153,7 @@ pub fn create_device(
     device_type: &mut BoxDynAudioIODeviceType,
     input_device_name: &JuceString,
     output_device_name: &JuceString,
-) -> Result<Box<dyn AudioDevice>, String> {
+) -> Result<UniquePtr<AudioIODevice>, String> {
     device_type
         .create_device(input_device_name.as_ref(), output_device_name.as_ref())
         .ok_or_else(|| "Could not create audio device".to_string())

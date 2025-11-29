@@ -5,18 +5,9 @@
 
 namespace cxx_juce
 {
-BoxDynAudioDeviceCallback::BoxDynAudioDeviceCallback (BoxDynAudioDeviceCallback&& other) noexcept
-    : _repr { other._repr }
+void DropBoxDynAudioDeviceCallback::operator() (BoxDynAudioDeviceCallback* callback) const
 {
-    other._repr = { 0, 0 };
-}
-
-BoxDynAudioDeviceCallback::~BoxDynAudioDeviceCallback() noexcept
-{
-    if (_repr != FatPtr { 0, 0 })
-    {
-        BoxDynAudioDeviceCallbackImpl::drop (this);
-    }
+    BoxDynAudioDeviceCallbackImpl::drop (callback);
 }
 
 std::unique_ptr<juce::AudioIODeviceCallback> wrapAudioDeviceCallback (BoxDynAudioDeviceCallback callback)

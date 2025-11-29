@@ -56,10 +56,4 @@ auto eq (const T& a, const T& b)
     return a == b;
 }
 
-template <typename T>
-std::unique_ptr<T> forceUniquePtrTarget ()
-{
-    return std::unique_ptr<T>{};
-}
-
 } // namespace cxx_juce
