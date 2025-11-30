@@ -41,9 +41,9 @@ impl AudioDeviceType for MockAudioDeviceType {
 
     fn create_device(
         &mut self,
-        input_device_name: &str,
-        output_device_name: &str,
-    ) -> Option<UniquePtr<AudioIODevice>> {
+        input_device_name: &JuceString,
+        output_device_name: &JuceString,
+    ) -> UniquePtr<AudioIODevice> {
         let device: Box<dyn AudioDevice> = Box::new(MockAudioDevice {
             name: format!("{} / {}", input_device_name, output_device_name),
             type_name: self.name(),
@@ -51,7 +51,7 @@ impl AudioDeviceType for MockAudioDeviceType {
             buffer_size: 128,
         });
 
-        Some(device.into())
+        device.into()
     }
 }
 
@@ -90,7 +90,7 @@ impl AudioDevice for MockAudioDevice {
     fn open(&mut self, sample_rate: f64, buffer_size: i32) -> JuceString {
         self.sample_rate = sample_rate;
         self.buffer_size = buffer_size;
-        JuceString::empty()
+        JuceString::default()
     }
 
     fn close(&mut self) {}
@@ -166,10 +166,10 @@ fn can_configure_audio_device_setup() {
 
     let current_setup = audio_device_manager.audio_device_setup();
 
-    assert_eq!(current_setup.buffer_size(), 512);
-    assert_eq!(current_setup.sample_rate(), 48000.0);
-    assert_eq!(current_setup.input_device_name(), "Microphone");
-    assert_eq!(current_setup.output_device_name(), "Speakers");
+    assert_eq!(current_setup.buffer_size, 512);
+    assert_eq!(current_setup.sample_rate, 48000.0);
+    assert_eq!(current_setup.input_device_name, "Microphone");
+    assert_eq!(current_setup.output_device_name, "Speakers");
     assert_eq!(current_setup.input_channels(), ChannelCount::Default);
     assert_eq!(current_setup.output_channels(), ChannelCount::Default);
 }

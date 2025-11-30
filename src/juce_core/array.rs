@@ -1,113 +1,56 @@
-use crate::define_juce_type;
-use std::fmt::Formatter;
+use crate::{define_array_type, define_juce_type};
 
-macro_rules! define_array {
-    (
-        $name:ident,
-        $ty: ty,
-        cxx_name = $cxx_name:literal,
-        default = $default:expr,
-        constructor = $constructor:expr,
-        drop = $drop:expr
-    ) => {
-        $crate::define_juce_type!($name, size = 16, align = 8, check_with = juce::ArrayLayout);
-
-        unsafe impl cxx::ExternType for $name {
-            type Id = cxx::type_id!($cxx_name);
-            type Kind = cxx::kind::Trivial;
-        }
-
-        impl Default for $name {
-            fn default() -> Self {
-                $default()
-            }
-        }
-
-        impl From<&[$ty]> for $name {
-            fn from(value: &[$ty]) -> Self {
-                let ptr = value.as_ptr();
-                let len = value.len();
-
-                len.try_into()
-                    .map(|len| unsafe { $constructor(ptr, len) })
-                    .unwrap_or_default()
-            }
-        }
-
-        impl Drop for $name {
-            fn drop(&mut self) {
-                $drop(self);
-            }
-        }
-
-        impl AsRef<[$ty]> for $name {
-            fn as_ref(&self) -> &[$ty] {
-                let data = self.get_raw_data_pointer();
-                self.size()
-                    .try_into()
-                    .map(|size| unsafe { std::slice::from_raw_parts(data, size) })
-                    .unwrap_or_default()
-            }
-        }
-
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{:?}", self.as_ref())
-            }
-        }
-    };
+define_juce_type! {
+    IntArray,
+    layout = ArrayLayout,
+    cxx_name = "juce::IntArray",
+    default = juce::int_array_new,
+    drop = juce::int_array_drop,
 }
 
-define_array!(
+define_array_type! {
     IntArray,
     i32,
-    cxx_name = "juce::IntArray",
-    default = juce::construct_i32_array,
-    constructor = juce::construct_i32_array_range,
-    drop = juce::drop_i32_array
-);
+    data = IntArray::data,
+    from_slice = juce::int_array_new_from_slice,
+}
 
-define_array!(
+define_juce_type! {
+    FloatArray,
+    layout = ArrayLayout,
+    cxx_name = "juce::FloatArray",
+    default = juce::float_array_new,
+    drop = juce::float_array_drop,
+}
+
+define_array_type! {
     FloatArray,
     f32,
-    cxx_name = "juce::FloatArray",
-    default = juce::construct_f32_array,
-    constructor = juce::construct_f32_array_range,
-    drop = juce::drop_f32_array
-);
+    data = FloatArray::data,
+    from_slice = juce::float_array_new_from_slice,
+}
 
-define_array!(
+define_juce_type! {
+    DoubleArray,
+    layout = ArrayLayout,
+    cxx_name = "juce::DoubleArray",
+    default = juce::double_array_new,
+    drop = juce::double_array_drop,
+}
+
+define_array_type! {
     DoubleArray,
     f64,
-    cxx_name = "juce::DoubleArray",
-    default = juce::construct_f64_array,
-    constructor = juce::construct_f64_array_range,
-    drop = juce::drop_f64_array
-);
+    data = DoubleArray::data,
+    from_slice = juce::double_array_new_from_slice,
+}
 
-define_juce_type!(
+define_juce_type! {
     StringArray,
-    size = 16,
-    align = 8,
-    has_leak_detector,
-    check_with = juce::StringArrayLayout
-);
-
-unsafe impl cxx::ExternType for StringArray {
-    type Id = cxx::type_id!("juce::StringArray");
-    type Kind = cxx::kind::Trivial;
-}
-
-impl Drop for StringArray {
-    fn drop(&mut self) {
-        juce::drop_string_array(self);
-    }
-}
-
-impl Default for StringArray {
-    fn default() -> Self {
-        juce::construct_string_array()
-    }
+    layout = juce::StringArrayLayout,
+    cxx_name = "juce::StringArray",
+    drop = juce::string_array_drop,
+    default = juce::string_array_new,
 }
 
 pub struct StringArrayIter<'a> {
@@ -140,8 +83,15 @@ impl<'a> IntoIterator for &'a StringArray {
     }
 }
 
+pub(crate) use juce::ArrayLayout;
+
 #[cxx::bridge(namespace = "juce")]
 mod juce {
+    enum ArrayLayout {
+        Size = 16,
+        Alignment = 8,
+    }
+
     enum StringArrayLayout {
         #[cfg(all(debug_assertions, not(windows)))]
         Size = 24,
@@ -150,84 +100,77 @@ mod juce {
         Alignment = 8,
     }
 
-    enum ArrayLayout {
-        Size = 16,
-        Alignment = 8,
-    }
-
     unsafe extern "C++" {
         include!("cxx_juce.h");
         include!("cxx_juce_core/cxx_juce_core.h");
 
-        #[cxx_name = "String"]
         type JuceString = crate::juce_core::JuceString;
-
         type IntArray = super::IntArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_i32_array"]
-        fn construct() -> IntArray;
+        #[cxx_name = "construct"]
+        fn int_array_new() -> IntArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_i32_array_range"]
-        unsafe fn construct(ptr: *const i32, size: i32) -> IntArray;
+        #[cxx_name = "construct"]
+        unsafe fn int_array_new_from_slice(ptr: *const i32, size: i32) -> IntArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "drop_i32_array"]
-        fn drop(value: &mut IntArray);
+        #[cxx_name = "drop"]
+        fn int_array_drop(value: &mut IntArray);
 
         #[cxx_name = "getRawDataPointer"]
-        fn get_raw_data_pointer(self: &IntArray) -> *const i32;
+        fn data(self: &IntArray) -> *const i32;
 
         fn size(self: &IntArray) -> i32;
 
         type FloatArray = super::FloatArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_f32_array"]
-        fn construct() -> FloatArray;
+        #[cxx_name = "construct"]
+        fn float_array_new() -> FloatArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_f32_array_range"]
-        unsafe fn construct(ptr: *const f32, size: i32) -> FloatArray;
+        #[cxx_name = "construct"]
+        unsafe fn float_array_new_from_slice(ptr: *const f32, size: i32) -> FloatArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "drop_f32_array"]
-        fn drop(value: &mut FloatArray);
+        #[cxx_name = "drop"]
+        fn float_array_drop(value: &mut FloatArray);
 
         #[cxx_name = "getRawDataPointer"]
-        fn get_raw_data_pointer(self: &FloatArray) -> *const f32;
+        fn data(self: &FloatArray) -> *const f32;
 
         fn size(self: &FloatArray) -> i32;
 
         type DoubleArray = super::DoubleArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_f64_array"]
-        fn construct() -> DoubleArray;
+        #[cxx_name = "construct"]
+        fn double_array_new() -> DoubleArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_f64_array_range"]
-        unsafe fn construct(ptr: *const f64, size: i32) -> DoubleArray;
+        #[cxx_name = "construct"]
+        unsafe fn double_array_new_from_slice(ptr: *const f64, size: i32) -> DoubleArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "drop_f64_array"]
-        fn drop(value: &mut DoubleArray);
+        #[cxx_name = "drop"]
+        fn double_array_drop(value: &mut DoubleArray);
 
         #[cxx_name = "getRawDataPointer"]
-        fn get_raw_data_pointer(self: &DoubleArray) -> *const f64;
+        fn data(self: &DoubleArray) -> *const f64;
 
         fn size(self: &DoubleArray) -> i32;
 
         type StringArray = super::StringArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_string_array"]
-        fn construct() -> StringArray;
+        #[cxx_name = "construct"]
+        fn string_array_new() -> StringArray;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "drop_string_array"]
-        fn drop(value: &mut StringArray);
+        #[cxx_name = "drop"]
+        fn string_array_drop(value: &mut StringArray);
 
         fn add(self: &mut StringArray, value: JuceString);
 

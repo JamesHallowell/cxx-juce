@@ -6,19 +6,24 @@ fn main() {
     }
 
     let bridges = [
-        "src/lib.rs",
-        "src/utils.rs",
-        "src/juce_core/string.rs",
-        "src/juce_core/bigint.rs",
-        "src/juce_core/array.rs",
-        "src/juce_core/system.rs",
-        "src/juce_audio_basics/filters.rs",
         "src/juce_audio_basics/buffer.rs",
-        "src/juce_audio_devices/mod.rs",
-        "src/juce_audio_devices/device_manager.rs",
+        "src/juce_audio_basics/filters.rs",
+        "src/juce_audio_basics/midi.rs",
         "src/juce_audio_devices/device.rs",
-        "src/juce_audio_devices/device_type.rs",
         "src/juce_audio_devices/device_callback.rs",
+        "src/juce_audio_devices/device_manager.rs",
+        "src/juce_audio_devices/device_type.rs",
+        "src/juce_audio_devices/mod.rs",
+        "src/juce_audio_processors/plugin_description.rs",
+        "src/juce_audio_processors/plugin_formats.rs",
+        "src/juce_audio_processors/plugin_instance.rs",
+        "src/juce_core/array.rs",
+        "src/juce_core/bigint.rs",
+        "src/juce_core/file.rs",
+        "src/juce_core/string.rs",
+        "src/juce_core/system.rs",
+        "src/juce_core/time.rs",
+        "src/lib.rs",
     ];
     for bridge in bridges.iter() {
         let _ = cxx_build::bridge(bridge);
@@ -58,6 +63,10 @@ fn main() {
         cmake.profile("RelWithDebInfo");
     }
 
+    if cfg!(target_os = "macos") {
+        cmake.define("CMAKE_OSX_DEPLOYMENT_TARGET", "12.0");
+    }
+
     let destination = cmake.build();
 
     println!("cargo:rerun-if-changed=bridge");
@@ -92,6 +101,9 @@ fn main() {
     if cfg!(target_os = "windows") {
         println!("cargo:rustc-link-lib=dylib=shell32");
         println!("cargo:rustc-link-lib=dylib=ole32");
+        println!("cargo:rustc-link-lib=dylib=gdi32");
+        println!("cargo:rustc-link-lib=dylib=oleaut32");
+        println!("cargo:rustc-link-lib=dylib=comdlg32");
     }
 
     if cfg!(target_os = "linux") {

@@ -1,6 +1,30 @@
 use crate::define_juce_type;
 
-#[cxx::bridge(namespace = "cxx_juce")]
+define_juce_type! {
+    IIRCoefficients,
+    layout = juce::IIRCoefficientsLayout,
+    cxx_name = "juce::IIRCoefficients",
+    drop = juce::iir_coefficients_drop,
+}
+
+define_juce_type! {
+    SingleThreadedIIRFilter,
+    layout = juce::SingleThreadedIIRFilterLayout,
+    cxx_name = "juce::SingleThreadedIIRFilter",
+    drop = juce::single_threaded_iir_filter_drop,
+    default = juce::single_threaded_iir_filter_new,
+}
+
+unsafe impl Send for SingleThreadedIIRFilter {}
+
+impl SingleThreadedIIRFilter {
+    /// Filter the given samples.
+    pub fn process(&mut self, samples: &mut [f32]) {
+        unsafe { self.process_samples(samples.as_mut_ptr(), samples.len() as i32) }
+    }
+}
+
+#[cxx::bridge(namespace = "juce")]
 mod juce {
     enum IIRCoefficientsLayout {
         Size = 20,
@@ -16,38 +40,36 @@ mod juce {
         include!("cxx_juce.h");
         include!("cxx_juce_audio_basics/cxx_juce_audio_basics.h");
 
-        #[namespace = "juce"]
         type IIRCoefficients = super::IIRCoefficients;
 
-        #[rust_name = "drop_iir_coefficients"]
-        fn drop(filter: &mut IIRCoefficients);
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "drop"]
+        fn iir_coefficients_drop(filter: &mut IIRCoefficients);
 
-        #[namespace = "juce"]
         #[cxx_name = "makeLowPass"]
         #[Self = "IIRCoefficients"]
         /// Make a low-pass filter.
         fn make_low_pass(sample_rate: f64, frequency: f64, q: f64) -> IIRCoefficients;
 
-        #[namespace = "juce"]
         #[cxx_name = "makeHighPass"]
         #[Self = "IIRCoefficients"]
         /// Make a high-pass filter.
         fn make_high_pass(sample_rate: f64, frequency: f64, q: f64) -> IIRCoefficients;
 
-        #[namespace = "juce"]
         #[cxx_name = "makeNotchFilter"]
         #[Self = "IIRCoefficients"]
         /// Make a notch filter.
         fn make_notch_filter(sample_rate: f64, frequency: f64, q: f64) -> IIRCoefficients;
 
-        #[namespace = "juce"]
         pub type SingleThreadedIIRFilter = crate::juce_audio_basics::SingleThreadedIIRFilter;
 
-        #[rust_name = "construct_single_threaded_iir_filter"]
-        fn construct() -> SingleThreadedIIRFilter;
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "construct"]
+        fn single_threaded_iir_filter_new() -> SingleThreadedIIRFilter;
 
-        #[rust_name = "drop_single_threaded_iir_filter"]
-        fn drop(filter: &mut SingleThreadedIIRFilter);
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "drop"]
+        fn single_threaded_iir_filter_drop(self_: &mut SingleThreadedIIRFilter);
 
         #[cxx_name = "setCoefficients"]
         /// Applies a set of coefficients to this filter.
@@ -59,57 +81,6 @@ mod juce {
             samples: *mut f32,
             num_samples: i32,
         );
-    }
-}
-
-define_juce_type!(
-    IIRCoefficients,
-    size = 20,
-    align = 4,
-    check_with = juce::IIRCoefficientsLayout
-);
-
-impl Drop for IIRCoefficients {
-    fn drop(&mut self) {
-        juce::drop_iir_coefficients(self);
-    }
-}
-
-unsafe impl cxx::ExternType for IIRCoefficients {
-    type Id = cxx::type_id!("juce::IIRCoefficients");
-    type Kind = cxx::kind::Trivial;
-}
-
-define_juce_type!(
-    SingleThreadedIIRFilter,
-    size = 36,
-    align = 4,
-    check_with = juce::SingleThreadedIIRFilterLayout
-);
-
-impl Drop for SingleThreadedIIRFilter {
-    fn drop(&mut self) {
-        juce::drop_single_threaded_iir_filter(self);
-    }
-}
-
-unsafe impl cxx::ExternType for SingleThreadedIIRFilter {
-    type Id = cxx::type_id!("juce::SingleThreadedIIRFilter");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl Send for SingleThreadedIIRFilter {}
-
-impl Default for SingleThreadedIIRFilter {
-    fn default() -> Self {
-        juce::construct_single_threaded_iir_filter()
-    }
-}
-
-impl SingleThreadedIIRFilter {
-    /// Filter the given samples.
-    pub fn process(&mut self, samples: &mut [f32]) {
-        unsafe { self.process_samples(samples.as_mut_ptr(), samples.len() as i32) }
     }
 }
 

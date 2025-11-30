@@ -2,12 +2,12 @@
 
 #include <cxx-juce/src/juce_audio_devices/device_manager.rs.h>
 
-CXX_JUCE_ASSERT_SIZE_ALIGN (AudioDeviceManager::AudioDeviceSetup, cxx_juce::AudioDeviceSetupLayout)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, outputDeviceName, cxx_juce::AudioDeviceSetupLayout::OutputDeviceNameOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, inputDeviceName, cxx_juce::AudioDeviceSetupLayout::InputDeviceNameOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, sampleRate, cxx_juce::AudioDeviceSetupLayout::SampleRateOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, bufferSize, cxx_juce::AudioDeviceSetupLayout::BufferSizeOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, inputChannels, cxx_juce::AudioDeviceSetupLayout::InputChannelsOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, useDefaultInputChannels, cxx_juce::AudioDeviceSetupLayout::UseDefaultInputChannelsOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, outputChannels, cxx_juce::AudioDeviceSetupLayout::OutputChannelsOffset)
-CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceManager::AudioDeviceSetup, useDefaultOutputChannels, cxx_juce::AudioDeviceSetupLayout::UseDefaultOutputChannelsOffset)
+CXX_JUCE_ASSERT_SIZE_ALIGN (AudioDeviceSetup)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, outputDeviceName, OutputDeviceNameOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, inputDeviceName, InputDeviceNameOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, sampleRate, SampleRateOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, bufferSize, BufferSizeOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, inputChannels, InputChannelsOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, useDefaultInputChannels, UseDefaultInputChannelsOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, outputChannels, OutputChannelsOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, useDefaultOutputChannels, UseDefaultOutputChannelsOffset)

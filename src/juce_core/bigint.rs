@@ -1,5 +1,13 @@
 use crate::define_juce_type;
 
+define_juce_type! {
+    BigInteger,
+    layout = juce::BigIntegerLayout,
+    cxx_name = "juce::BigInteger",
+    drop = juce::big_integer_drop,
+    default = juce::big_integer_new,
+}
+
 #[cxx::bridge(namespace = "juce")]
 mod juce {
     enum BigIntegerLayout {
@@ -14,12 +22,12 @@ mod juce {
         type BigInteger = super::BigInteger;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "construct_big_integer"]
-        fn construct() -> BigInteger;
+        #[cxx_name = "construct"]
+        fn big_integer_new() -> BigInteger;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "drop_big_integer"]
-        fn drop(value: &mut BigInteger);
+        #[cxx_name = "drop"]
+        fn big_integer_drop(self_: &mut BigInteger);
 
         #[cxx_name = "countNumberOfSetBits"]
         fn count_number_of_set_bits(self: &BigInteger) -> i32;
@@ -33,30 +41,6 @@ mod juce {
             num_bits: i32,
             should_be_set: bool,
         ) -> &mut BigInteger;
-    }
-}
-
-define_juce_type!(
-    BigInteger,
-    size = 40,
-    align = 8,
-    check_with = juce::BigIntegerLayout
-);
-
-unsafe impl cxx::ExternType for BigInteger {
-    type Id = cxx::type_id!("juce::BigInteger");
-    type Kind = cxx::kind::Trivial;
-}
-
-impl Default for BigInteger {
-    fn default() -> Self {
-        juce::construct_big_integer()
-    }
-}
-
-impl Drop for BigInteger {
-    fn drop(&mut self) {
-        juce::drop_big_integer(self);
     }
 }
 

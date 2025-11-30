@@ -5,7 +5,6 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
-        #[cxx_name = "String"]
         type JuceString = crate::juce_core::JuceString;
 
         type SystemStats;

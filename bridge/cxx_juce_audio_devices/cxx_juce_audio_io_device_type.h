@@ -6,13 +6,5 @@
 
 namespace cxx_juce
 {
-
-struct DropBoxDynAudioIODeviceType
-{
-    void operator() (FatPtr<DropBoxDynAudioIODeviceType>* deviceType) const;
-};
-
-using BoxDynAudioIODeviceType = FatPtr<DropBoxDynAudioIODeviceType>;
-
-std::unique_ptr<juce::AudioIODeviceType> wrapAudioDeviceType (BoxDynAudioIODeviceType deviceType);
+CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE (AudioDeviceType, juce::AudioIODeviceType)
 } // namespace cxx_juce

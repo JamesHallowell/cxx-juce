@@ -25,12 +25,13 @@ add_library(cxx-juce STATIC)
 
 target_compile_features(cxx-juce
     PUBLIC
-        cxx_std_17
+        cxx_std_20
 )
 
 target_compile_definitions(cxx-juce
     PUBLIC
         JUCE_USE_CURL=0
+        JUCE_WEB_BROWSER=0
 )
 
 message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
@@ -54,6 +55,8 @@ target_sources(cxx-juce
         cxx_juce_audio_devices/cxx_juce_audio_io_device_callback.h
         cxx_juce_audio_devices/cxx_juce_audio_io_device_type.cpp
         cxx_juce_audio_devices/cxx_juce_audio_io_device_type.h
+        cxx_juce_audio_processors/cxx_juce_audio_processors.cpp
+        cxx_juce_audio_processors/cxx_juce_audio_processors.h
         cxx_juce_core/cxx_juce_core.cpp
         cxx_juce_core/cxx_juce_core.h
         cxx_juce_utils.h
@@ -67,6 +70,7 @@ target_link_libraries(cxx-juce
         juce::juce_audio_devices
         juce::juce_core
         juce::juce_events
+        juce::juce_audio_processors
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags
 )

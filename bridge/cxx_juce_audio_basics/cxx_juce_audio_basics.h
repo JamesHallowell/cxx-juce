@@ -2,14 +2,8 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 
+#include <cxx_juce_utils.h>
 #include <rust/cxx.h>
 
-template <>
-struct rust::IsRelocatable<juce::IIRCoefficients> : std::true_type
-{
-};
-
-template <>
-struct rust::IsRelocatable<juce::SingleThreadedIIRFilter> : std::true_type
-{
-};
+CXX_JUCE_DECLARE_RELOCATABLE (IIRCoefficients)
+CXX_JUCE_DECLARE_RELOCATABLE (SingleThreadedIIRFilter)
