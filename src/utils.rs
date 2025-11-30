@@ -107,7 +107,7 @@ macro_rules! define_juce_type {
 
         $(
             $(
-                crate::define_juce_type!(@field $name, $field, $ty, $field_key, $field_value);
+                $crate::define_juce_type!(@field $name, $field, $ty, $field_key, $field_value);
             )*
         )*
     };

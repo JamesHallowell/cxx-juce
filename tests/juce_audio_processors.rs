@@ -54,7 +54,7 @@ impl AudioPlugin for MockPlugin {
 #[test]
 fn creating_an_instance_of_an_audio_plugin() {
     let _juce = JUCE::initialise();
-    let mut mgr = AudioPluginFormatManager::new();
+    let mut mgr = AudioPluginFormatManager::default();
 
     mgr.add_format(MockPluginFormat);
     assert_eq!(mgr.get_num_formats(), 1);

@@ -10,14 +10,11 @@ define_juce_type! {
     AudioPluginFormatManager,
     layout = juce::AudioPluginFormatManagerLayout,
     cxx_name = "juce::AudioPluginFormatManager",
+    default = juce::audio_plugin_format_manager_new,
     drop = juce::audio_plugin_format_manager_drop,
 }
 
 impl AudioPluginFormatManager {
-    pub fn new() -> Self {
-        juce::audio_plugin_format_manager_new()
-    }
-
     pub fn get_format_ref(&self, index: i32) -> Option<&juce::AudioPluginFormat> {
         let ptr = self.get_format(index);
         unsafe { ptr.as_ref() }
