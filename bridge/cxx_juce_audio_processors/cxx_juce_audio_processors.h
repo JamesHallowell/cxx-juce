@@ -8,6 +8,7 @@
 namespace juce
 {
 using OwnedArrayPluginDescription = OwnedArray<PluginDescription>;
+using LeakedObjectDetectorPluginDescription = LeakedObjectDetector<PluginDescription>;
 }
 
 namespace cxx_juce

@@ -3,6 +3,7 @@
 mod array;
 mod bigint;
 mod file;
+mod memory;
 mod string;
 mod system;
 mod time;
@@ -17,3 +18,4 @@ pub use {
 };
 
 pub(crate) use array::ArrayLayout;
+pub(crate) use memory::LeakedObjectDetectorLayout;

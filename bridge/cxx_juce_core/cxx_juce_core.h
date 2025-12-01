@@ -7,11 +7,11 @@
 namespace juce
 {
 using JuceString = String;
-void initialiseNSApplication();
 using IntArray = Array<int>;
 using FloatArray = Array<float>;
 using DoubleArray = Array<double>;
 
+void initialiseNSApplication();
 rust::i64 toMilliseconds (const Time& time);
 } // namespace juce
 
