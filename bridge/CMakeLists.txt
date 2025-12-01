@@ -49,12 +49,6 @@ target_sources(cxx-juce
         cxx_juce_audio_basics/cxx_juce_audio_basics.h
         cxx_juce_audio_devices/cxx_juce_audio_devices.cpp
         cxx_juce_audio_devices/cxx_juce_audio_devices.h
-        cxx_juce_audio_devices/cxx_juce_audio_io_device.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_io_device.h
-        cxx_juce_audio_devices/cxx_juce_audio_io_device_callback.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_io_device_callback.h
-        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.cpp
-        cxx_juce_audio_devices/cxx_juce_audio_io_device_type.h
         cxx_juce_audio_processors/cxx_juce_audio_processors.cpp
         cxx_juce_audio_processors/cxx_juce_audio_processors.h
         cxx_juce_core/cxx_juce_core.cpp

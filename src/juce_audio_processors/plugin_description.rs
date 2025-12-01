@@ -131,7 +131,6 @@ mod juce {
 
     unsafe extern "C++" {
         include!("cxx_juce.h");
-        include!("cxx_juce_audio_processors/cxx_juce_audio_processors.h");
 
         type PluginDescription = super::PluginDescription;
         type OwnedArrayPluginDescription = super::OwnedArrayPluginDescription;

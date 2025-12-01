@@ -31,9 +31,9 @@ CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioPlugin)
 
 std::unique_ptr<juce::AudioPluginFormat> wrap (BoxDynAudioPluginFormat format) noexcept
 {
-    struct AudioPluginFormatWrapper : juce::AudioPluginFormat
+    struct AudioPluginFormat : juce::AudioPluginFormat
     {
-        explicit AudioPluginFormatWrapper (BoxDynAudioPluginFormat format) noexcept
+        explicit AudioPluginFormat (BoxDynAudioPluginFormat format) noexcept
             : _format { std::move (format) }
         {
         }
@@ -104,14 +104,14 @@ std::unique_ptr<juce::AudioPluginFormat> wrap (BoxDynAudioPluginFormat format) n
         BoxDynAudioPluginFormat _format;
     };
 
-    return std::make_unique<AudioPluginFormatWrapper> (std::move (format));
+    return std::make_unique<AudioPluginFormat> (std::move (format));
 }
 
 std::unique_ptr<juce::AudioPluginInstance> wrap (BoxDynAudioPlugin plugin) noexcept
 {
-    struct AudioPluginWrapper : juce::AudioPluginInstance
+    struct AudioPlugin : juce::AudioPluginInstance
     {
-        explicit AudioPluginWrapper (BoxDynAudioPlugin plugin)
+        explicit AudioPlugin (BoxDynAudioPlugin plugin)
             : _plugin { std::move (plugin) }
         {
         }
@@ -156,7 +156,7 @@ std::unique_ptr<juce::AudioPluginInstance> wrap (BoxDynAudioPlugin plugin) noexc
         BoxDynAudioPlugin _plugin;
     };
 
-    return std::make_unique<AudioPluginWrapper> (std::move (plugin));
+    return std::make_unique<AudioPlugin> (std::move (plugin));
 }
 
 } // namespace cxx_juce

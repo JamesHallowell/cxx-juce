@@ -18,12 +18,5 @@ CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE (AudioPluginFormat, juce::AudioPluginFormat)
 CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE (AudioPlugin, juce::AudioPluginInstance)
 } // namespace cxx_juce
 
-template <>
-struct rust::IsRelocatable<juce::AudioPluginFormatManager> : std::true_type
-{
-};
-
-template <>
-struct rust::IsRelocatable<juce::PluginDescription> : std::true_type
-{
-};
+CXX_JUCE_DECLARE_RELOCATABLE (AudioPluginFormatManager)
+CXX_JUCE_DECLARE_RELOCATABLE (PluginDescription)
