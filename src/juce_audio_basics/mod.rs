@@ -6,4 +6,4 @@ mod midi;
 
 pub use buffer::AudioSampleBuffer;
 pub use filters::{IIRCoefficients, SingleThreadedIIRFilter};
-pub use midi::MidiBuffer;
+pub use midi::{MidiBuffer, MidiFile, MidiMessage};
