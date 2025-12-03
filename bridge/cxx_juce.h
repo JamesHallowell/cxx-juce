@@ -1,36 +1,17 @@
 #pragma once
 
-#include <juce_audio_devices/juce_audio_devices.h>
-#include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_core/juce_core.h>
-#include <juce_events/juce_events.h>
-
-#include <concepts>
-
-namespace juce
-{
-using JuceString = String;
-using AudioIODeviceTypeArray = OwnedArray<AudioIODeviceType>;
-void initialiseNSApplication();
-} // namespace juce
-
-namespace cxx_juce
-{
-class AudioIODeviceWrapper;
-}
-
-#include "cxx_juce_audio_basics/cxx_juce_audio_basics.h"
-#include "cxx_juce_audio_devices/cxx_juce_audio_devices.h"
-#include "cxx_juce_core/cxx_juce_core.h"
+#include <cxx_juce_core/cxx_juce_core.h>
+#include <cxx_juce_audio_basics/cxx_juce_audio_basics.h>
+#include <cxx_juce_audio_devices/cxx_juce_audio_devices.h>
+#include <cxx_juce_audio_processors/cxx_juce_audio_processors.h>
 
 #include <memory>
+#include <concepts>
+
 #include <rust/cxx.h>
 
 namespace cxx_juce
 {
-struct BoxedAudioIODeviceCallback;
-struct BoxedAudioIODeviceType;
-
 inline rust::Str toStr (const juce::String& string)
 {
     return { string.toRawUTF8(), string.getNumBytesAsUTF8() };

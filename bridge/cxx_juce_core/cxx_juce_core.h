@@ -2,10 +2,12 @@
 
 #include <juce_core/juce_core.h>
 
-#include <rust/cxx.h>
+#include <cxx_juce_utils.h>
 
 namespace juce
 {
+using JuceString = String;
+void initialiseNSApplication();
 using IntArray = Array<int>;
 using FloatArray = Array<float>;
 using DoubleArray = Array<double>;

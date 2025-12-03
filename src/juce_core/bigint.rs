@@ -17,7 +17,6 @@ mod juce {
 
     unsafe extern "C++" {
         include!("cxx_juce.h");
-        include!("cxx_juce_core/cxx_juce_core.h");
 
         type BigInteger = super::BigInteger;
 
