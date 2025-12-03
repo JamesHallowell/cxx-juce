@@ -26,9 +26,6 @@ define_juce_type! {
 #[cxx::bridge(namespace = "juce")]
 mod juce {
     enum MidiBufferLayout {
-        #[cfg(all(debug_assertions, not(windows)))]
-        Size = 24,
-        #[cfg(any(not(debug_assertions), windows))]
         Size = 16,
         Alignment = 8,
     }
@@ -39,9 +36,6 @@ mod juce {
     }
 
     enum MidiFileLayout {
-        #[cfg(all(debug_assertions, not(windows)))]
-        Size = 32,
-        #[cfg(any(not(debug_assertions), windows))]
         Size = 24,
         Alignment = 8,
     }

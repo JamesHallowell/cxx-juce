@@ -4,14 +4,14 @@ use cxx_juce::{
         AudioDevice, AudioDeviceManager, AudioDeviceSetup, AudioDeviceType, AudioIODevice,
         ChannelCount,
     },
-    juce_core::JuceString,
+    juce_core::{DoubleArray, IntArray, JuceString, StringArray},
     JUCE,
 };
 
 #[derive(Default)]
 struct MockAudioDeviceType {
-    input_devices: Vec<String>,
-    output_devices: Vec<String>,
+    input_devices: StringArray,
+    output_devices: StringArray,
 }
 
 impl AudioDeviceType for MockAudioDeviceType {
@@ -22,20 +22,16 @@ impl AudioDeviceType for MockAudioDeviceType {
     fn scan_for_devices(&mut self) {
         self.input_devices = ["Microphone", "Audio Interface", "Headset"]
             .into_iter()
-            .map(String::from)
             .collect();
 
-        self.output_devices = ["Speakers", "Headphones"]
-            .into_iter()
-            .map(String::from)
-            .collect();
+        self.output_devices = ["Speakers", "Headphones"].into_iter().collect();
     }
 
-    fn input_devices(&self) -> Vec<String> {
+    fn input_devices(&self) -> StringArray {
         self.input_devices.clone()
     }
 
-    fn output_devices(&self) -> Vec<String> {
+    fn output_devices(&self) -> StringArray {
         self.output_devices.clone()
     }
 
@@ -52,6 +48,14 @@ impl AudioDeviceType for MockAudioDeviceType {
         });
 
         device.into()
+    }
+
+    fn default_device_index(&self, _for_input: bool) -> i32 {
+        0
+    }
+
+    fn has_separate_inputs_and_outputs(&self) -> bool {
+        true
     }
 }
 
@@ -79,12 +83,12 @@ impl AudioDevice for MockAudioDevice {
         self.buffer_size
     }
 
-    fn available_sample_rates(&mut self) -> Vec<f64> {
-        vec![44100.0, 48000.0]
+    fn available_sample_rates(&mut self) -> DoubleArray {
+        [44100.0, 48000.0].as_slice().into()
     }
 
-    fn available_buffer_sizes(&mut self) -> Vec<i32> {
-        vec![128, 256, 512]
+    fn available_buffer_sizes(&mut self) -> IntArray {
+        [128, 256, 512].as_slice().into()
     }
 
     fn open(&mut self, sample_rate: f64, buffer_size: i32) -> JuceString {
@@ -102,6 +106,62 @@ impl AudioDevice for MockAudioDevice {
     fn output_channels(&self) -> i32 {
         2
     }
+
+    fn output_channel_names(&self) -> StringArray {
+        ["Left", "Right"].into_iter().collect()
+    }
+
+    fn input_channel_names(&self) -> StringArray {
+        ["Left", "Right"].into_iter().collect()
+    }
+
+    fn default_buffer_size(&self) -> i32 {
+        512
+    }
+
+    fn is_open(&self) -> bool {
+        false
+    }
+
+    fn is_playing(&self) -> bool {
+        false
+    }
+
+    fn last_error(&self) -> String {
+        String::new()
+    }
+
+    fn bit_depth(&self) -> i32 {
+        24
+    }
+
+    fn output_latency(&self) -> i32 {
+        0
+    }
+
+    fn input_latency(&self) -> i32 {
+        0
+    }
+
+    fn has_control_panel(&self) -> bool {
+        false
+    }
+
+    fn show_control_panel(&mut self) -> bool {
+        false
+    }
+
+    fn set_audio_preprocessing_enabled(&mut self, _enabled: bool) -> bool {
+        false
+    }
+
+    fn xrun_count(&self) -> i32 {
+        0
+    }
+
+    fn start(&mut self) {}
+
+    fn stop(&mut self) {}
 }
 
 #[test]
@@ -118,28 +178,13 @@ fn can_query_audio_device_types() {
     device_type.as_mut().scan_for_devices();
 
     assert_eq!(
-        device_type
-            .as_mut()
-            .get_input_device_names()
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect::<Vec<_>>(),
+        device_type.as_mut().get_input_device_names().as_slice(),
         ["Microphone", "Audio Interface", "Headset"]
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<_>>()
     );
 
     assert_eq!(
-        device_type
-            .get_output_device_names()
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect::<Vec<_>>(),
+        device_type.get_output_device_names().as_slice(),
         ["Speakers", "Headphones"]
-            .into_iter()
-            .map(String::from)
-            .collect::<Vec<_>>()
     );
 }
 

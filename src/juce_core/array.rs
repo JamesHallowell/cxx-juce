@@ -1,4 +1,5 @@
-use crate::{define_array_type, define_juce_type};
+use crate::{define_array_type, define_juce_type, juce_core::JuceString};
+use std::iter::FromIterator;
 
 define_juce_type! {
     IntArray,
@@ -51,6 +52,33 @@ define_juce_type! {
     cxx_name = "juce::StringArray",
     drop = juce::string_array_drop,
     default = juce::string_array_new,
+    clone = juce::string_array_clone,
+    equality = juce::string_array_equality
+}
+
+define_array_type! {
+    StringArray,
+    JuceString,
+    data = StringArray::data,
+}
+
+impl<I> FromIterator<I> for StringArray
+where
+    I: Into<JuceString>,
+{
+    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
+        let mut array = Self::default();
+        for item in iter {
+            array.add(item.into());
+        }
+        array
+    }
+}
+
+impl StringArray {
+    pub fn add(&mut self, string: impl Into<JuceString>) {
+        self.__add(string.into());
+    }
 }
 
 pub struct StringArrayIter<'a> {
@@ -93,9 +121,6 @@ mod juce {
     }
 
     enum StringArrayLayout {
-        #[cfg(all(debug_assertions, not(windows)))]
-        Size = 24,
-        #[cfg(any(not(debug_assertions), windows))]
         Size = 16,
         Alignment = 8,
     }
@@ -171,7 +196,21 @@ mod juce {
         #[cxx_name = "drop"]
         fn string_array_drop(value: &mut StringArray);
 
-        fn add(self: &mut StringArray, value: JuceString);
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "construct"]
+        fn string_array_clone(value: &StringArray) -> StringArray;
+
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "eq"]
+        fn string_array_equality(value: &StringArray, other: &StringArray) -> bool;
+
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "begin"]
+        fn data(self: &StringArray) -> *const JuceString;
+
+        #[doc(hidden)]
+        #[cxx_name = "add"]
+        fn __add(self: &mut StringArray, value: JuceString);
 
         #[cxx_name = "getReference"]
         fn get_reference(self: &StringArray, index: i32) -> &JuceString;
@@ -188,9 +227,9 @@ mod test {
     #[test]
     fn string_array_iter() {
         let mut array = StringArray::default();
-        array.add(JuceString::new("Hello"));
-        array.add(JuceString::new("World"));
-        array.add(JuceString::new("!"));
+        array.add("Hello");
+        array.add("World");
+        array.add("!");
 
         assert_eq!(array.size(), 3);
 
@@ -208,5 +247,11 @@ mod test {
 
         assert_eq!(array.size(), 3);
         assert_eq!(array.as_ref(), &[1, 2, 3]);
+    }
+
+    #[test]
+    fn string_array_as_slice() {
+        let array: StringArray = ["Hello", "World", "!"].into_iter().collect();
+        assert_eq!(array.as_ref(), ["Hello", "World", "!"]);
     }
 }

@@ -1,8 +1,8 @@
 #include <cxx_juce_audio_devices/cxx_juce_audio_devices.h>
 
 #include <cxx-juce/src/juce_audio_devices/device.rs.h>
-#include <cxx-juce/src/juce_audio_devices/device_manager.rs.h>
 #include <cxx-juce/src/juce_audio_devices/device_callback.rs.h>
+#include <cxx-juce/src/juce_audio_devices/device_manager.rs.h>
 #include <cxx-juce/src/juce_audio_devices/device_type.rs.h>
 
 #include <cxx_juce_utils.h>
@@ -37,37 +37,27 @@ std::unique_ptr<juce::AudioIODevice> wrap (BoxDynAudioDevice device) noexcept
 
         juce::StringArray getOutputChannelNames() override
         {
-            return {};
+            return AudioDeviceImpl::output_channel_names (_device);
         }
 
         juce::StringArray getInputChannelNames() override
         {
-            return {};
+            return AudioDeviceImpl::input_channel_names (_device);
         }
 
         juce::Array<double> getAvailableSampleRates() override
         {
-            juce::Array<double> sampleRates;
-            for (auto sampleRate : AudioDeviceImpl::available_sample_rates (_device))
-            {
-                sampleRates.add (sampleRate);
-            }
-            return sampleRates;
+            return AudioDeviceImpl::available_sample_rates (_device);
         }
 
         juce::Array<int> getAvailableBufferSizes() override
         {
-            juce::Array<int> bufferSizes;
-            for (auto bufferSize : AudioDeviceImpl::available_buffer_sizes (_device))
-            {
-                bufferSizes.add (bufferSize);
-            }
-            return bufferSizes;
+            return AudioDeviceImpl::available_buffer_sizes (_device);
         }
 
         int getDefaultBufferSize() override
         {
-            return 0;
+            return AudioDeviceImpl::default_buffer_size (_device);
         }
 
         juce::String open (const juce::BigInteger& /*inputChannels*/,
@@ -85,25 +75,27 @@ std::unique_ptr<juce::AudioIODevice> wrap (BoxDynAudioDevice device) noexcept
 
         bool isOpen() override
         {
-            return false;
+            return AudioDeviceImpl::is_open (_device);
         }
 
         void start (juce::AudioIODeviceCallback* /*callback*/) override
         {
+            AudioDeviceImpl::start (_device);
         }
 
         void stop() override
         {
+            AudioDeviceImpl::stop (_device);
         }
 
         bool isPlaying() override
         {
-            return false;
+            return AudioDeviceImpl::is_playing (_device);
         }
 
         juce::String getLastError() override
         {
-            return {};
+            return static_cast<std::string> (AudioDeviceImpl::last_error (_device));
         }
 
         int getCurrentBufferSizeSamples() override
@@ -118,7 +110,7 @@ std::unique_ptr<juce::AudioIODevice> wrap (BoxDynAudioDevice device) noexcept
 
         int getCurrentBitDepth() override
         {
-            return 0;
+            return AudioDeviceImpl::bit_depth (_device);
         }
 
         [[nodiscard]] juce::BigInteger getActiveOutputChannels() const override
@@ -133,32 +125,32 @@ std::unique_ptr<juce::AudioIODevice> wrap (BoxDynAudioDevice device) noexcept
 
         int getOutputLatencyInSamples() override
         {
-            return 0;
+            return AudioDeviceImpl::output_latency (_device);
         }
 
         int getInputLatencyInSamples() override
         {
-            return 0;
+            return AudioDeviceImpl::input_latency (_device);
         }
 
         [[nodiscard]] bool hasControlPanel() const override
         {
-            return false;
+            return AudioDeviceImpl::has_control_panel (_device);
         }
 
         bool showControlPanel() override
         {
-            return false;
+            return AudioDeviceImpl::show_control_panel (_device);
         }
 
-        bool setAudioPreprocessingEnabled (bool) override
+        bool setAudioPreprocessingEnabled (bool enabled) override
         {
-            return false;
+            return AudioDeviceImpl::set_audio_preprocessing_enabled (_device, enabled);
         }
 
         [[nodiscard]] int getXRunCount() const noexcept override
         {
-            return 0;
+            return AudioDeviceImpl::xrun_count (_device);
         }
 
         BoxDynAudioDevice _device;
@@ -218,7 +210,6 @@ std::unique_ptr<juce::AudioIODeviceCallback> wrap (BoxDynAudioDeviceCallback cal
     return std::make_unique<AudioDeviceCallback> (std::move (callback));
 }
 
-
 std::unique_ptr<juce::AudioIODeviceType> wrap (BoxDynAudioDeviceType deviceType) noexcept
 {
     struct AudioDeviceType : juce::AudioIODeviceType
@@ -237,19 +228,15 @@ std::unique_ptr<juce::AudioIODeviceType> wrap (BoxDynAudioDeviceType deviceType)
 
         [[nodiscard]] juce::StringArray getDeviceNames (bool wantInputNames) const override
         {
-            const auto names = wantInputNames ? AudioDeviceTypeImpl::input_devices (_deviceType) : AudioDeviceTypeImpl::output_devices (_deviceType);
+            auto names = wantInputNames ? AudioDeviceTypeImpl::input_devices (_deviceType)
+                                        : AudioDeviceTypeImpl::output_devices (_deviceType);
 
-            juce::StringArray stringArray;
-            for (const auto& name : names)
-            {
-                stringArray.add (static_cast<std::string> (name));
-            }
-            return stringArray;
+            return names;
         }
 
-        [[nodiscard]] int getDefaultDeviceIndex (bool /*forInput*/) const override
+        [[nodiscard]] int getDefaultDeviceIndex (bool forInput) const override
         {
-            return 0;
+            return AudioDeviceTypeImpl::default_device_index (_deviceType, forInput);
         }
 
         int getIndexOfDevice (juce::AudioIODevice* device,
@@ -260,7 +247,7 @@ std::unique_ptr<juce::AudioIODeviceType> wrap (BoxDynAudioDeviceType deviceType)
 
         [[nodiscard]] bool hasSeparateInputsAndOutputs() const override
         {
-            return true;
+            return AudioDeviceTypeImpl::has_separate_inputs_and_outputs (_deviceType);
         }
 
         juce::AudioIODevice* createDevice (const juce::String& inputDeviceName,

@@ -6,7 +6,7 @@ pub mod juce_audio_processors;
 pub mod juce_core;
 mod utils;
 
-use crate::juce_core::JuceString;
+use juce_core::JuceString;
 use std::{
     rc::Rc,
     sync::atomic::{AtomicBool, Ordering},

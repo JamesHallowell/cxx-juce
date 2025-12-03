@@ -82,7 +82,6 @@ macro_rules! define_juce_type {
                 }
             ),+,
         },
-        $(leak_detector = $leak_detector:ty,)*
         layout = $layout:ty,
         $(
             $key:ident = $value:expr
@@ -93,10 +92,6 @@ macro_rules! define_juce_type {
         pub struct $name {
             $(
                 $vis $field: $ty,
-            )*
-            $(
-                #[cfg(all(debug_assertions, not(windows)))]
-                leak_detector: $leak_detector,
             )*
             _marker: $crate::utils::PhantomUnsend,
         }
@@ -140,6 +135,13 @@ macro_rules! define_juce_type {
         impl Default for $name {
             fn default() -> Self {
                 ($default)()
+            }
+        }
+    };
+    (@prop $name:ident, clone, $clone:expr) => {
+        impl Clone for $name {
+            fn clone(&self) -> Self {
+                ($clone)(self)
             }
         }
     };
@@ -197,6 +199,12 @@ macro_rules! define_array_type {
     (@prop $name:ident, $ty:ty, data, $data:expr) => {
         impl AsRef<[$ty]> for $name {
             fn as_ref(&self) -> &[$ty] {
+                self.as_slice()
+            }
+        }
+
+        impl $name {
+            pub fn as_slice(&self) -> &[$ty] {
                 let data = ($data)(self);
                 self.size()
                     .try_into()

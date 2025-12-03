@@ -1,6 +1,6 @@
 use crate::{
-    define_array_type, define_juce_type, define_leak_detector,
-    juce_core::{JuceString, Time},
+    define_array_type, define_juce_type,
+    juce_core::{ArrayLayout, JuceString, Time},
 };
 use cxx::UniquePtr;
 
@@ -73,21 +73,14 @@ define_juce_type! {
             with = with_has_ara_extension,
         },
     },
-    leak_detector = LeakedObjectDetectorPluginDescription,
     layout = juce::PluginDescriptionLayout,
     cxx_name = "juce::PluginDescription",
     default = juce::plugin_description_new,
 }
 
-define_leak_detector! {
-    LeakedObjectDetectorPluginDescription,
-    cxx_name = "juce::LeakedObjectDetectorPluginDescription",
-    drop = juce::leaked_object_detector_plugin_description_drop,
-}
-
 define_juce_type! {
     OwnedArrayPluginDescription,
-    layout = crate::juce_core::ArrayLayout,
+    layout = ArrayLayout,
     cxx_name = "juce::OwnedArrayPluginDescription",
     default = juce::owned_array_plugin_description_new,
     drop = juce::owned_array_plugin_description_drop,
@@ -142,18 +135,11 @@ mod juce {
 
         type PluginDescription = super::PluginDescription;
         type OwnedArrayPluginDescription = super::OwnedArrayPluginDescription;
-        type LeakedObjectDetectorPluginDescription = super::LeakedObjectDetectorPluginDescription;
-        type JuceString = crate::JuceString;
+        type JuceString = crate::juce_core::JuceString;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]
         fn plugin_description_new() -> PluginDescription;
-
-        #[namespace = "cxx_juce"]
-        #[cxx_name = "drop"]
-        fn leaked_object_detector_plugin_description_drop(
-            self_: &mut LeakedObjectDetectorPluginDescription,
-        );
 
         #[cxx_name = "createIdentifierString"]
         fn create_identifier_string(self: &PluginDescription) -> JuceString;

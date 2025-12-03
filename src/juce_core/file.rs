@@ -1,4 +1,4 @@
-use crate::{define_array_type, define_juce_type, JuceString};
+use crate::{define_array_type, define_juce_type, juce_core::JuceString};
 
 define_juce_type! {
     File,
@@ -52,7 +52,7 @@ mod juce {
 
         type File = super::File;
         type FileSearchPath = super::FileSearchPath;
-        type JuceString = crate::JuceString;
+        type JuceString = crate::juce_core::JuceString;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]

@@ -12,10 +12,10 @@ pub use {
     array::{DoubleArray, IntArray, StringArray},
     bigint::BigInteger,
     file::{File, FileSearchPath},
+    memory::MemoryBlock,
     string::JuceString,
     system::SystemStats,
     time::Time,
 };
 
 pub(crate) use array::ArrayLayout;
-pub(crate) use memory::LeakedObjectDetectorLayout;
