@@ -44,6 +44,9 @@ impl_align!(2, u16);
 impl_align!(4, u32);
 impl_align!(8, u64);
 
+#[derive(Copy, Clone)]
+pub(crate) struct PhantomUnsend(core::marker::PhantomData<*mut ()>);
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! define_juce_type {
@@ -58,6 +61,7 @@ macro_rules! define_juce_type {
         $(#[$type_attr])*
         pub struct $name {
             _space: core::mem::MaybeUninit<[<$crate::utils::Const<{<$layout>::Alignment.repr as usize}> as $crate::utils::AlignType>::Type; <$layout>::Size.repr as usize / <$layout>::Alignment.repr as usize]>,
+            _marker: $crate::utils::PhantomUnsend,
         }
 
         $crate::static_assert_size_and_alignment!($name, $layout);
@@ -94,6 +98,7 @@ macro_rules! define_juce_type {
                 #[cfg(all(debug_assertions, not(windows)))]
                 leak_detector: $leak_detector,
             )*
+            _marker: $crate::utils::PhantomUnsend,
         }
 
         $crate::static_assert_size_and_alignment!($name, $layout);
