@@ -9,7 +9,7 @@ namespace juce
 {
 using AudioIODeviceTypeArray = OwnedArray<AudioIODeviceType>;
 using AudioDeviceSetup = AudioDeviceManager::AudioDeviceSetup;
-}
+} // namespace juce
 
 namespace cxx_juce
 {

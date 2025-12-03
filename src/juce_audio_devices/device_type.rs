@@ -86,10 +86,10 @@ mod juce {
         fn scan_for_devices(device_type: &mut BoxDynAudioDeviceType);
 
         #[Self = "AudioDeviceTypeImpl"]
-        fn input_devices(device_type: &BoxDynAudioDeviceType) -> Vec<String>;
+        fn input_devices(device_type: &BoxDynAudioDeviceType) -> StringArray;
 
         #[Self = "AudioDeviceTypeImpl"]
-        fn output_devices(device_type: &BoxDynAudioDeviceType) -> Vec<String>;
+        fn output_devices(device_type: &BoxDynAudioDeviceType) -> StringArray;
 
         #[Self = "AudioDeviceTypeImpl"]
         fn create_device(
@@ -97,6 +97,12 @@ mod juce {
             input_device_name: &JuceString,
             output_device_name: &JuceString,
         ) -> UniquePtr<AudioIODevice>;
+
+        #[Self = "AudioDeviceTypeImpl"]
+        fn default_device_index(device_type: &BoxDynAudioDeviceType, for_input: bool) -> i32;
+
+        #[Self = "AudioDeviceTypeImpl"]
+        fn has_separate_inputs_and_outputs(device_type: &BoxDynAudioDeviceType) -> bool;
     }
 }
 
@@ -113,10 +119,10 @@ define_trait! {
     fn scan_for_devices(&mut self);
 
     /// Returns a list of known input devices.
-    fn input_devices(&self) -> Vec<String>;
+    fn input_devices(&self) -> StringArray;
 
     /// Returns a list of the known output devices.
-    fn output_devices(&self) -> Vec<String>;
+    fn output_devices(&self) -> StringArray;
 
     /// Create an [`AudioDevice`].
     fn create_device(
@@ -124,6 +130,12 @@ define_trait! {
         input_device_name: &JuceString,
         output_device_name: &JuceString,
     ) -> UniquePtr<AudioIODevice>;
+
+    /// Returns the index of the default device.
+    fn default_device_index(&self, for_input: bool) -> i32;
+
+    /// Returns true if the device type has separate inputs and outputs.
+    fn has_separate_inputs_and_outputs(&self) -> bool;
 }
 
 impl From<Box<dyn AudioDeviceType>> for UniquePtr<AudioIODeviceType> {

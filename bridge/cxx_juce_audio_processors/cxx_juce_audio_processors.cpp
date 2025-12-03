@@ -48,49 +48,49 @@ std::unique_ptr<juce::AudioPluginFormat> wrap (BoxDynAudioPluginFormat format) n
             return AudioPluginFormatImpl::find_all_types_for_file (_format, results, file);
         }
 
-        bool fileMightContainThisPluginType (const juce::String&) override
+        bool fileMightContainThisPluginType (const juce::String& fileOrIdentifier) override
         {
-            return {};
+            return AudioPluginFormatImpl::file_might_contain_this_plugin_type (_format, fileOrIdentifier);
         }
 
-        juce::String getNameOfPluginFromIdentifier (const juce::String&) override
+        juce::String getNameOfPluginFromIdentifier (const juce::String& fileOrIdentifier) override
         {
-            return {};
+            return AudioPluginFormatImpl::get_name_of_plugin_from_identifier (_format, fileOrIdentifier);
         }
 
-        bool pluginNeedsRescanning (const juce::PluginDescription&) override
+        bool pluginNeedsRescanning (const juce::PluginDescription& plugin) override
         {
-            return {};
+            return AudioPluginFormatImpl::plugin_needs_rescanning (_format, plugin);
         }
 
-        bool doesPluginStillExist (const juce::PluginDescription&) override
+        bool doesPluginStillExist (const juce::PluginDescription& plugin) override
         {
-            return {};
+            return AudioPluginFormatImpl::does_plugin_still_exist (_format, plugin);
         }
 
         bool canScanForPlugins() const override
         {
-            return {};
+            return AudioPluginFormatImpl::can_scan_for_plugins (_format);
         }
 
         bool isTrivialToScan() const override
         {
-            return {};
+            return AudioPluginFormatImpl::is_trivial_to_scan (_format);
         }
 
-        juce::StringArray searchPathsForPlugins (const juce::FileSearchPath&, bool, bool) override
+        juce::StringArray searchPathsForPlugins (const juce::FileSearchPath& directories, bool recursive, bool allowAsync) override
         {
-            return {};
+            return AudioPluginFormatImpl::search_paths_for_plugins (_format, directories, recursive, allowAsync);
         }
 
         juce::FileSearchPath getDefaultLocationsToSearch() override
         {
-            return {};
+            return AudioPluginFormatImpl::get_default_locations_to_search (_format);
         }
 
-        bool requiresUnblockedMessageThreadDuringCreation (const juce::PluginDescription&) const override
+        bool requiresUnblockedMessageThreadDuringCreation (const juce::PluginDescription& description) const override
         {
-            return {};
+            return AudioPluginFormatImpl::requires_unblocked_message_thread_during_creation (_format, description);
         }
 
     protected:
@@ -115,43 +115,83 @@ std::unique_ptr<juce::AudioPluginInstance> wrap (BoxDynAudioPlugin plugin) noexc
             : _plugin { std::move (plugin) }
         {
         }
+
         const juce::String getName() const override { return AudioPluginImpl::get_name (_plugin); }
+
         void prepareToPlay (double sampleRate, int maximumExpectedSamplesPerBlock) override
         {
-            std::ignore = sampleRate;
-            std::ignore = maximumExpectedSamplesPerBlock;
+            AudioPluginImpl::prepare_to_play (_plugin, sampleRate, maximumExpectedSamplesPerBlock);
         }
-        void releaseResources() override {}
+
+        void releaseResources() override
+        {
+            AudioPluginImpl::release_resources (_plugin);
+        }
+
         void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override
         {
-            std::ignore = buffer;
-            std::ignore = midiMessages;
+            AudioPluginImpl::process_block (_plugin, buffer, midiMessages);
         }
-        double getTailLengthSeconds() const override { return 0.0; }
-        bool acceptsMidi() const override { return false; }
-        bool producesMidi() const override { return false; }
+
+        double getTailLengthSeconds() const override
+        {
+            return AudioPluginImpl::get_tail_length_seconds (_plugin);
+        }
+
+        bool acceptsMidi() const override
+        {
+            return AudioPluginImpl::accepts_midi (_plugin);
+        }
+
+        bool producesMidi() const override
+        {
+            return AudioPluginImpl::produces_midi (_plugin);
+        }
+
         juce::AudioProcessorEditor* createEditor() override { return nullptr; }
-        bool hasEditor() const override { return false; }
-        int getNumPrograms() override { return 0; }
-        int getCurrentProgram() override { return 0; }
-        void setCurrentProgram (int index) override { std::ignore = index; }
+
+        bool hasEditor() const override
+        {
+            return AudioPluginImpl::has_editor (_plugin);
+        }
+
+        int getNumPrograms() override
+        {
+            return AudioPluginImpl::get_num_programs (_plugin);
+        }
+
+        int getCurrentProgram() override
+        {
+            return AudioPluginImpl::get_current_program (_plugin);
+        }
+
+        void setCurrentProgram (int index) override
+        {
+            AudioPluginImpl::set_current_program (_plugin, index);
+        }
+
         const juce::String getProgramName (int index) override
         {
-            std::ignore = index;
-            return {};
+            return AudioPluginImpl::get_program_name (_plugin, index);
         }
+
         void changeProgramName (int index, const juce::String& newName) override
         {
-            std::ignore = index;
-            std::ignore = newName;
+            AudioPluginImpl::change_program_name (_plugin, index, newName);
         }
+
         void getStateInformation (juce::MemoryBlock& destData) override { std::ignore = destData; }
+
         void setStateInformation (const void* data, int sizeInBytes) override
         {
             std::ignore = data;
             std::ignore = sizeInBytes;
         }
-        void fillInPluginDescription (juce::PluginDescription&) const override {}
+
+        void fillInPluginDescription (juce::PluginDescription& description) const override
+        {
+            AudioPluginImpl::fill_in_plugin_description (_plugin, description);
+        }
 
         BoxDynAudioPlugin _plugin;
     };

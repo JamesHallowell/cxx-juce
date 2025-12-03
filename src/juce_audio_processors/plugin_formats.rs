@@ -1,7 +1,7 @@
 use crate::{
     define_juce_type, define_trait,
     juce_audio_processors::{AudioPluginInstance, OwnedArrayPluginDescription, PluginDescription},
-    JuceString,
+    juce_core::{FileSearchPath, JuceString, StringArray},
 };
 use cxx::UniquePtr;
 use std::pin::Pin;
@@ -35,9 +35,6 @@ impl AudioPluginFormatManager {
 #[cxx::bridge(namespace = "juce")]
 mod juce {
     enum AudioPluginFormatManagerLayout {
-        #[cfg(all(debug_assertions, not(windows)))]
-        Size = 32,
-        #[cfg(any(not(debug_assertions), windows))]
         Size = 16,
         Alignment = 8,
     }
@@ -45,7 +42,7 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
-        type JuceString = crate::JuceString;
+        type JuceString = crate::juce_core::JuceString;
         type PluginDescription = crate::juce_audio_processors::PluginDescription;
         type OwnedArrayPluginDescription =
             crate::juce_audio_processors::OwnedArrayPluginDescription;
@@ -171,6 +168,53 @@ mod juce {
             sample_rate: f64,
             buffer_size: i32,
         ) -> UniquePtr<AudioPluginInstance>;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn file_might_contain_this_plugin_type(
+            format: &BoxDynAudioPluginFormat,
+            file_or_identifier: &JuceString,
+        ) -> bool;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn get_name_of_plugin_from_identifier(
+            format: &BoxDynAudioPluginFormat,
+            file_or_identifier: &JuceString,
+        ) -> JuceString;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn plugin_needs_rescanning(
+            format: &BoxDynAudioPluginFormat,
+            plugin: &PluginDescription,
+        ) -> bool;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn does_plugin_still_exist(
+            format: &BoxDynAudioPluginFormat,
+            plugin: &PluginDescription,
+        ) -> bool;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn can_scan_for_plugins(format: &BoxDynAudioPluginFormat) -> bool;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn is_trivial_to_scan(format: &BoxDynAudioPluginFormat) -> bool;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn search_paths_for_plugins(
+            format: &mut BoxDynAudioPluginFormat,
+            directories_to_search: &FileSearchPath,
+            recursive: bool,
+            allow_async_plugins: bool,
+        ) -> StringArray;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn get_default_locations_to_search(format: &mut BoxDynAudioPluginFormat) -> FileSearchPath;
+
+        #[Self = "AudioPluginFormatImpl"]
+        fn requires_unblocked_message_thread_during_creation(
+            format: &BoxDynAudioPluginFormat,
+            description: &PluginDescription,
+        ) -> bool;
     }
 }
 
@@ -179,18 +223,53 @@ define_trait! {
     AudioPluginFormatImpl,
     "cxx_juce::BoxDynAudioPluginFormat",
 
+    /// Returns the name of this plugin format.
     fn name(&self) -> JuceString;
 
+    /// Searches a file or identifier to find all the plugin types contained within it.
     fn find_all_types_for_file(
         &mut self,
         results: &mut OwnedArrayPluginDescription,
         file: &JuceString,
     );
 
+    /// Creates an instance of a plugin from a description.
     fn create_plugin_instance(
         &mut self,
         description: &PluginDescription,
         sample_rate: f64,
         buffer_size: i32,
     ) -> UniquePtr<AudioPluginInstance>;
+
+    /// Returns true if the given file or identifier might contain plugins of this format.
+    fn file_might_contain_this_plugin_type(&self, file_or_identifier: &JuceString) -> bool;
+
+    /// Tries to extract the name of a plugin from a file or identifier.
+    fn get_name_of_plugin_from_identifier(&self, file_or_identifier: &JuceString) -> JuceString;
+
+    /// Returns true if the plugin needs to be rescanned.
+    fn plugin_needs_rescanning(&self, plugin: &PluginDescription) -> bool;
+
+    /// Returns true if the plugin still exists on disk or in the system.
+    fn does_plugin_still_exist(&self, plugin: &PluginDescription) -> bool;
+
+    /// Returns true if this format can scan for plugins.
+    fn can_scan_for_plugins(&self) -> bool;
+
+    /// Returns true if this format is trivial to scan (e.g., no filesystem access required).
+    fn is_trivial_to_scan(&self) -> bool;
+
+    /// Searches the given directories for plugins of this format.
+    fn search_paths_for_plugins(
+        &mut self,
+        directories_to_search: &FileSearchPath,
+        recursive: bool,
+        allow_async_plugins: bool,
+    ) -> StringArray;
+
+    /// Returns the default locations to search for plugins of this format.
+    fn get_default_locations_to_search(&mut self) -> FileSearchPath;
+
+    /// Returns true if the plugin requires an unblocked message thread during creation.
+    fn requires_unblocked_message_thread_during_creation(&self, description: &PluginDescription) -> bool;
 }

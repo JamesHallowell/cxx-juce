@@ -32,6 +32,7 @@ target_compile_definitions(cxx-juce
     PUBLIC
         JUCE_USE_CURL=0
         JUCE_WEB_BROWSER=0
+        JUCE_CHECK_MEMORY_LEAKS=0
 )
 
 message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")

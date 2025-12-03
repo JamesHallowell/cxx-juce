@@ -1,4 +1,7 @@
-use crate::{define_trait, JuceString};
+use crate::{
+    define_trait,
+    juce_core::{DoubleArray, IntArray, JuceString, StringArray},
+};
 use cxx::UniquePtr;
 
 pub use juce::{AudioIODevice, BoxDynAudioDevice};
@@ -13,6 +16,7 @@ mod juce {
         type IntArray = crate::juce_core::IntArray;
         type DoubleArray = crate::juce_core::DoubleArray;
         type JuceString = crate::juce_core::JuceString;
+        type StringArray = crate::juce_core::StringArray;
 
         #[namespace = "cxx_juce"]
         type BoxDynAudioDevice = Box<dyn super::AudioDevice>;
@@ -77,10 +81,10 @@ mod juce {
         fn buffer_size(device: &mut BoxDynAudioDevice) -> i32;
 
         #[Self = "AudioDeviceImpl"]
-        fn available_sample_rates(device: &mut BoxDynAudioDevice) -> Vec<f64>;
+        fn available_sample_rates(device: &mut BoxDynAudioDevice) -> DoubleArray;
 
         #[Self = "AudioDeviceImpl"]
-        fn available_buffer_sizes(device: &mut BoxDynAudioDevice) -> Vec<i32>;
+        fn available_buffer_sizes(device: &mut BoxDynAudioDevice) -> IntArray;
 
         #[Self = "AudioDeviceImpl"]
         fn open(device: &mut BoxDynAudioDevice, sample_rate: f64, buffer_size: i32) -> JuceString;
@@ -93,6 +97,51 @@ mod juce {
 
         #[Self = "AudioDeviceImpl"]
         fn output_channels(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn output_channel_names(device: &BoxDynAudioDevice) -> StringArray;
+
+        #[Self = "AudioDeviceImpl"]
+        fn input_channel_names(device: &BoxDynAudioDevice) -> StringArray;
+
+        #[Self = "AudioDeviceImpl"]
+        fn default_buffer_size(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn is_open(device: &BoxDynAudioDevice) -> bool;
+
+        #[Self = "AudioDeviceImpl"]
+        fn is_playing(device: &BoxDynAudioDevice) -> bool;
+
+        #[Self = "AudioDeviceImpl"]
+        fn last_error(device: &BoxDynAudioDevice) -> String;
+
+        #[Self = "AudioDeviceImpl"]
+        fn bit_depth(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn output_latency(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn input_latency(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn has_control_panel(device: &BoxDynAudioDevice) -> bool;
+
+        #[Self = "AudioDeviceImpl"]
+        fn show_control_panel(device: &mut BoxDynAudioDevice) -> bool;
+
+        #[Self = "AudioDeviceImpl"]
+        fn set_audio_preprocessing_enabled(device: &mut BoxDynAudioDevice, enabled: bool) -> bool;
+
+        #[Self = "AudioDeviceImpl"]
+        fn xrun_count(device: &BoxDynAudioDevice) -> i32;
+
+        #[Self = "AudioDeviceImpl"]
+        fn start(device: &mut BoxDynAudioDevice);
+
+        #[Self = "AudioDeviceImpl"]
+        fn stop(device: &mut BoxDynAudioDevice);
     }
 }
 
@@ -115,10 +164,10 @@ define_trait! {
     fn buffer_size(&mut self) -> i32;
 
     /// The available sample rates.
-    fn available_sample_rates(&mut self) -> Vec<f64>;
+    fn available_sample_rates(&mut self) -> DoubleArray;
 
     /// The available buffer sizes.
-    fn available_buffer_sizes(&mut self) -> Vec<i32>;
+    fn available_buffer_sizes(&mut self) -> IntArray;
 
     /// Tries to open the device so that it can be used for audio processing.
     fn open(&mut self, sample_rate: f64, buffer_size: i32) -> JuceString;
@@ -131,6 +180,51 @@ define_trait! {
 
     /// The number of output channels.
     fn output_channels(&self) -> i32;
+
+    /// The names of the output channels.
+    fn output_channel_names(&self) -> StringArray;
+
+    /// The names of the input channels.
+    fn input_channel_names(&self) -> StringArray;
+
+    /// The default buffer size.
+    fn default_buffer_size(&self) -> i32;
+
+    /// Returns true if the device is currently open.
+    fn is_open(&self) -> bool;
+
+    /// Returns true if the device is currently playing.
+    fn is_playing(&self) -> bool;
+
+    /// Returns the last error that occurred.
+    fn last_error(&self) -> String;
+
+    /// Returns the current bit depth.
+    fn bit_depth(&self) -> i32;
+
+    /// Returns the output latency in samples.
+    fn output_latency(&self) -> i32;
+
+    /// Returns the input latency in samples.
+    fn input_latency(&self) -> i32;
+
+    /// Returns true if the device has a control panel.
+    fn has_control_panel(&self) -> bool;
+
+    /// Shows the control panel for the device.
+    fn show_control_panel(&mut self) -> bool;
+
+    /// Enables or disables audio preprocessing.
+    fn set_audio_preprocessing_enabled(&mut self, enabled: bool) -> bool;
+
+    /// Returns the number of xruns that have occurred.
+    fn xrun_count(&self) -> i32;
+
+    /// Starts the device.
+    fn start(&mut self);
+
+    /// Stops the device.
+    fn stop(&mut self);
 }
 
 impl From<Box<dyn AudioDevice>> for UniquePtr<AudioIODevice> {
