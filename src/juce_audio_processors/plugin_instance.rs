@@ -69,6 +69,43 @@ mod juce {
             audio: Pin<&mut AudioSampleBuffer>,
             midi: Pin<&mut MidiBuffer>,
         );
+
+        #[cxx_name = "processBlockBypassed"]
+        fn process_block_bypassed(
+            self: Pin<&mut AudioProcessor>,
+            audio: Pin<&mut AudioSampleBuffer>,
+            midi: Pin<&mut MidiBuffer>,
+        );
+
+        #[cxx_name = "getTotalNumInputChannels"]
+        fn get_total_num_input_channels(self: &AudioProcessor) -> i32;
+
+        #[cxx_name = "getTotalNumOutputChannels"]
+        fn get_total_num_output_channels(self: &AudioProcessor) -> i32;
+
+        #[cxx_name = "getLatencySamples"]
+        fn get_latency_samples(self: &AudioProcessor) -> i32;
+
+        #[cxx_name = "setLatencySamples"]
+        fn set_latency_samples(self: Pin<&mut AudioProcessor>, new_latency: i32);
+
+        #[cxx_name = "getSampleRate"]
+        fn get_sample_rate(self: &AudioProcessor) -> f64;
+
+        #[cxx_name = "getBlockSize"]
+        fn get_block_size(self: &AudioProcessor) -> i32;
+
+        #[cxx_name = "isSuspended"]
+        fn is_suspended(self: &AudioProcessor) -> bool;
+
+        #[cxx_name = "setNonRealtime"]
+        fn set_non_realtime(self: Pin<&mut AudioProcessor>, is_non_realtime: bool);
+
+        #[cxx_name = "fillInPluginDescription"]
+        fn fill_in_plugin_description(
+            self: &AudioPluginInstance,
+            description: Pin<&mut PluginDescription>,
+        );
     }
 
     #[namespace = "cxx_juce"]

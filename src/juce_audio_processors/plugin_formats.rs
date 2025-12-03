@@ -16,12 +16,12 @@ define_juce_type! {
 
 impl AudioPluginFormatManager {
     pub fn get_format_ref(&self, index: i32) -> Option<&juce::AudioPluginFormat> {
-        let ptr = self.get_format(index);
+        let ptr = self.get_format_raw(index);
         unsafe { ptr.as_ref() }
     }
 
     pub fn get_format_mut(&mut self, index: i32) -> Option<Pin<&mut juce::AudioPluginFormat>> {
-        let ptr = self.get_format(index);
+        let ptr = self.get_format_raw(index);
         unsafe { ptr.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
     }
 
@@ -75,13 +75,16 @@ mod juce {
         #[rust_name = "get_num_formats"]
         fn getNumFormats(self: &AudioPluginFormatManager) -> i32;
 
-        #[rust_name = "get_format"]
+        #[cxx_name = "getFormat"]
         #[doc(hidden)]
-        fn getFormat(self: &AudioPluginFormatManager, index: i32) -> *mut AudioPluginFormat;
+        fn get_format_raw(self: &AudioPluginFormatManager, index: i32) -> *mut AudioPluginFormat;
 
-        #[rust_name = "add_format_raw"]
         #[doc(hidden)]
-        unsafe fn addFormat(self: &mut AudioPluginFormatManager, format: *mut AudioPluginFormat);
+        #[cxx_name = "addFormat"]
+        unsafe fn add_format_raw(
+            self: &mut AudioPluginFormatManager,
+            format: *mut AudioPluginFormat,
+        );
 
         #[cxx_name = "getName"]
         fn get_name(self: &AudioPluginFormat) -> JuceString;
