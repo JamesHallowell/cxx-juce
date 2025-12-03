@@ -194,16 +194,16 @@ define_juce_type! {
             offset = juce::AudioDeviceSetupLayout::BufferSizeOffset,
             with = with_buffer_size,
         },
-        input_channels: BigInteger = {
+        pub input_channels: BigInteger = {
             offset = juce::AudioDeviceSetupLayout::InputChannelsOffset,
         },
-        use_default_input_channels: bool = {
+        pub use_default_input_channels: bool = {
             offset = juce::AudioDeviceSetupLayout::UseDefaultInputChannelsOffset,
         },
-        output_channels: BigInteger = {
+        pub output_channels: BigInteger = {
             offset = juce::AudioDeviceSetupLayout::OutputChannelsOffset,
         },
-        use_default_output_channels: bool = {
+        pub use_default_output_channels: bool = {
             offset = juce::AudioDeviceSetupLayout::UseDefaultOutputChannelsOffset,
         },
     },

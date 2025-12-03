@@ -1,5 +1,5 @@
 use crate::{
-    define_array_type, define_juce_type,
+    define_array_type, define_juce_type, define_leak_detector,
     juce_core::{JuceString, Time},
 };
 use cxx::UniquePtr;
@@ -39,6 +39,7 @@ define_juce_type! {
         pub last_file_mod_time: Time = {
             offset = juce::PluginDescriptionLayout::LastFileModTimeOffset,
             with = with_last_file_mod_time,
+            get = last_file_mod_time,
         },
         pub last_info_update_time: Time = {
             offset = juce::PluginDescriptionLayout::LastInfoUpdateTimeOffset,
@@ -72,9 +73,16 @@ define_juce_type! {
             with = with_has_ara_extension,
         },
     },
+    leak_detector = LeakedObjectDetectorPluginDescription,
     layout = juce::PluginDescriptionLayout,
     cxx_name = "juce::PluginDescription",
-    default = juce::plugin_description_new
+    default = juce::plugin_description_new,
+}
+
+define_leak_detector! {
+    LeakedObjectDetectorPluginDescription,
+    cxx_name = "juce::LeakedObjectDetectorPluginDescription",
+    drop = juce::leaked_object_detector_plugin_description_drop,
 }
 
 define_juce_type! {
@@ -134,11 +142,18 @@ mod juce {
 
         type PluginDescription = super::PluginDescription;
         type OwnedArrayPluginDescription = super::OwnedArrayPluginDescription;
+        type LeakedObjectDetectorPluginDescription = super::LeakedObjectDetectorPluginDescription;
         type JuceString = crate::JuceString;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]
         fn plugin_description_new() -> PluginDescription;
+
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "drop"]
+        fn leaked_object_detector_plugin_description_drop(
+            self_: &mut LeakedObjectDetectorPluginDescription,
+        );
 
         #[cxx_name = "createIdentifierString"]
         fn create_identifier_string(self: &PluginDescription) -> JuceString;
@@ -177,18 +192,18 @@ mod test {
 
     #[test]
     fn creating_plugin_descriptions() {
-        let a = PluginDescription::default().with_name(JuceString::new("A"));
-        let b = PluginDescription::default().with_name(JuceString::new("B"));
-        let c = PluginDescription::default().with_name(JuceString::new("C"));
+        let a = PluginDescription::default().with_name("A");
+        let b = PluginDescription::default().with_name("B");
+        let c = PluginDescription::default().with_name("C");
 
         let mut array = OwnedArrayPluginDescription::default();
         array.add(a);
         array.add(b);
         array.add(c);
 
-        assert_eq!(array.get(0).unwrap().name.as_ref(), "A");
-        assert_eq!(array.get(1).unwrap().name.as_ref(), "B");
-        assert_eq!(array.get(2).unwrap().name.as_ref(), "C");
+        assert_eq!(array.get(0).unwrap().name, "A");
+        assert_eq!(array.get(1).unwrap().name, "B");
+        assert_eq!(array.get(2).unwrap().name, "C");
     }
 
     #[test]

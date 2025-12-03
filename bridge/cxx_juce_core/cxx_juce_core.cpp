@@ -4,6 +4,7 @@
 #include <cxx-juce/src/juce_core/bigint.rs.h>
 #include <cxx-juce/src/juce_core/string.rs.h>
 #include <cxx-juce/src/juce_core/time.rs.h>
+#include <cxx-juce/src/juce_core/memory.rs.h>
 
 namespace juce
 {
@@ -23,3 +24,4 @@ CXX_JUCE_ASSERT_SIZE_ALIGN (IntArray)
 CXX_JUCE_ASSERT_SIZE_ALIGN (DoubleArray)
 CXX_JUCE_ASSERT_SIZE_ALIGN (StringArray)
 CXX_JUCE_ASSERT_SIZE_ALIGN (Time)
+CXX_JUCE_ASSERT_SIZE_ALIGN_WITH (LeakedObjectDetector<void>, LeakedObjectDetectorLayout)

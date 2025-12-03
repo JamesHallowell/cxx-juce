@@ -20,6 +20,7 @@ fn main() {
         "src/juce_core/array.rs",
         "src/juce_core/bigint.rs",
         "src/juce_core/file.rs",
+        "src/juce_core/memory.rs",
         "src/juce_core/string.rs",
         "src/juce_core/system.rs",
         "src/juce_core/time.rs",

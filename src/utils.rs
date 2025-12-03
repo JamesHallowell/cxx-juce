@@ -78,6 +78,7 @@ macro_rules! define_juce_type {
                 }
             ),+,
         },
+        $(leak_detector = $leak_detector:ty,)*
         layout = $layout:ty,
         $(
             $key:ident = $value:expr
@@ -88,6 +89,10 @@ macro_rules! define_juce_type {
         pub struct $name {
             $(
                 $vis $field: $ty,
+            )*
+            $(
+                #[cfg(all(debug_assertions, not(windows)))]
+                leak_detector: $leak_detector,
             )*
         }
 
@@ -106,9 +111,11 @@ macro_rules! define_juce_type {
         )*
 
         $(
-            $(
-                $crate::define_juce_type!(@field $name, $field, $ty, $field_key, $field_value);
-            )*
+            impl $name {
+                $(
+                    $crate::define_juce_type!(@field $name, $field, $ty, $field_key, $field_value);
+                )*
+            }
         )*
     };
     (@prop $name:ident, cxx_name, $cxx_name:literal) => {
@@ -139,11 +146,24 @@ macro_rules! define_juce_type {
         }
     };
     (@field $name:ident, $field:ident, $field_ty:ty, with, $with:ident) => {
-        impl $name {
-            pub fn $with(mut self, value: impl Into<$field_ty>) -> Self {
-                self.$field = value.into();
-                self
-            }
+        pub fn $with(mut self, value: impl Into<$field_ty>) -> Self {
+            self.$field = value.into();
+            self
+        }
+    };
+    (@field $name:ident, $field:ident, $field_ty:ty, get, $get:ident) => {
+        pub fn $get(&self) -> $field_ty {
+            self.$field
+        }
+    };
+    (@field $name:ident, $field:ident, $field_ty:ty, get_ref, $get_ref:ident) => {
+        pub fn $get_ref(&self) -> &$field_ty {
+            &self.$field
+        }
+    };
+    (@field $name:ident, $field:ident, $field_ty:ty, set, $set:ident) => {
+        pub fn $set(&mut self, value: impl Into<$field_ty>) {
+            self.$field = value.into();
         }
     };
 }
