@@ -12,7 +12,7 @@ asio = []
 
 [dependencies]
 cxx = "1.0.188"
-slotmap = "1.0.7"
+slotmap = "1.1.1"
 
 [build-dependencies]
 cmake = "0.1.50"
