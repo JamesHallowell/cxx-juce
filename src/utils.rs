@@ -47,6 +47,18 @@ impl_align!(8, u64);
 #[derive(Copy, Clone)]
 pub(crate) struct PhantomUnsend(core::marker::PhantomData<*mut ()>);
 
+impl PhantomUnsend {
+    pub(crate) fn new() -> Self {
+        Self(core::marker::PhantomData)
+    }
+}
+
+impl std::fmt::Debug for PhantomUnsend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PhantomUnsend").finish()
+    }
+}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! define_juce_type {
@@ -181,35 +193,40 @@ macro_rules! define_array_type {
     (
         $name:ident,
         $ty:ty,
+        $iter:ident,
+        $iter_ref:ident,
+        data = $data:path,
         $(
-            $key:ident = $value:expr
+            $key:ident = $value:path
         ),* $(,)?
     ) => {
-        $(
-            $crate::define_array_type!(@prop $name, $ty, $key, $value);
-        )*
-    };
-    (@prop $name:ident, $ty:ty, index, $index:expr) => {
         impl $name {
-            pub fn get(&self, index: i32) -> $ty {
-                ($index)(self, index)
-            }
-        }
-    };
-    (@prop $name:ident, $ty:ty, data, $data:expr) => {
-        impl AsRef<[$ty]> for $name {
-            fn as_ref(&self) -> &[$ty] {
-                self.as_slice()
-            }
-        }
+            pub fn get_ref(&self, index: i32) -> Option<&$ty> {
+                if index < 0 || index >= self.size() {
+                    return None;
+                }
 
-        impl $name {
+                let data = $data(self);
+                let index = index.try_into().ok()?;
+                unsafe { data.offset(index).as_ref() }
+            }
+
+            pub fn get(&self, index: i32) -> Option<$ty> {
+                self.get_ref(index).cloned()
+            }
+
             pub fn as_slice(&self) -> &[$ty] {
-                let data = ($data)(self);
+                let data = $data(self);
                 self.size()
                     .try_into()
                     .map(|size| unsafe { std::slice::from_raw_parts(data, size) })
                     .unwrap_or_default()
+            }
+        }
+
+        impl AsRef<[$ty]> for $name {
+            fn as_ref(&self) -> &[$ty] {
+                self.as_slice()
             }
         }
 
@@ -218,16 +235,137 @@ macro_rules! define_array_type {
                 write!(f, "{:?}", self.as_ref())
             }
         }
+
+        define_array_into_iter! {
+            $name => $iter,
+            $ty,
+            $name::get
+        }
+
+        define_array_into_iter! {
+            $name => $iter_ref,
+            ref $ty,
+            $name::get_ref
+        }
+
+        $(
+            $crate::define_array_type!(@prop $name, $ty, $key, $value);
+        )*
     };
-    (@prop $name:ident, $ty:ty, from_slice, $from_slice:expr) => {
+    (@prop $name:ident, $ty:ty, from_slice, $from_slice:path) => {
         impl From<&[$ty]> for $name {
             fn from(value: &[$ty]) -> Self {
                 let ptr = value.as_ptr();
                 let len = value.len();
 
                 len.try_into()
-                    .map(|len| unsafe { ($from_slice)(ptr, len) })
+                    .map(|len| unsafe { $from_slice(ptr, len) })
                     .unwrap_or_default()
+            }
+        }
+    };
+    (@prop $name:ident, $ty:ty, add, $add:path) => {
+        impl<I> FromIterator<I> for $name
+        where
+            I: Into<$ty>,
+        {
+            fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
+                let mut array = Self::default();
+                for item in iter {
+                    array.add(item.into());
+                }
+                array
+            }
+        }
+    };
+    (@prop $name:ident, $ty:ty, add_ref, $add:path) => {
+        impl<I> FromIterator<I> for $name
+        where
+            I: Into<$ty>,
+        {
+            fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
+                let mut array = Self::default();
+                for item in iter {
+                    array.add(&item.into());
+                }
+                array
+            }
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! define_array_into_iter {
+    (
+        $name:ident => $iter:ident,
+        $ty:ty,
+        $get:path
+    ) => {
+        pub struct $iter {
+            array: $name,
+            index: i32,
+        }
+
+        impl Iterator for $iter {
+            type Item = $ty;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let index = self.index;
+                self.index += 1;
+                if index < self.array.size() {
+                    $get(&self.array, index)
+                } else {
+                    None
+                }
+            }
+        }
+
+        impl IntoIterator for $name {
+            type Item = $ty;
+            type IntoIter = $iter;
+
+            fn into_iter(self) -> Self::IntoIter {
+                Self::IntoIter {
+                    array: self,
+                    index: 0,
+                }
+            }
+        }
+    };
+    (
+        $name:ident => $iter:ident,
+        ref $ty:ty,
+        $get:path
+    ) => {
+        pub struct $iter<'a> {
+            array: &'a $name,
+            index: i32,
+        }
+
+        impl<'a> Iterator for $iter<'a> {
+            type Item = &'a $ty;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let index = self.index;
+                self.index += 1;
+                if index < self.array.size() {
+                    $get(&self.array, index)
+                } else {
+                    None
+                }
+            }
+        }
+
+        impl<'a> IntoIterator for &'a $name {
+            type Item = &'a $ty;
+            type IntoIter = $iter<'a>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                Self::IntoIter {
+                    array: self,
+                    index: 0,
+                }
             }
         }
     };
@@ -242,7 +380,7 @@ macro_rules! define_trait {
         $cxx_name:literal,
         $(
             $(#[$attr:meta])*
-            fn $method_name:ident ( $($args:tt)* ) $(-> $ret:ty)?;
+            fn $method_name:ident ( $($args:tt)* ) $(-> $ret:ty)? $(, @$tag:tt)*;
         )*
     ) => {
         $(#[$trait_attr])*
@@ -271,6 +409,7 @@ macro_rules! define_trait {
                     $method_name,
                     ( $($args)* ),
                     $(-> $ret)?
+                    $(, @$tag)*
                 );
             )*
         }
@@ -294,5 +433,21 @@ macro_rules! define_trait {
         fn $method(self_: &mut Box<dyn $trait_name>, $( $arg : $ty ),* ) $(-> $ret)? {
             self_.$method( $( $arg ),* )
         }
+    };
+    (@handle_method
+        $trait_name:ident,
+        $method:ident,
+        ( &self $(, $arg:ident : $ty:ty )* $(,)? ),
+        $(-> $ret:ty)?,
+        @nobind
+    ) => {
+    };
+    (@handle_method
+        $trait_name:ident,
+        $method:ident,
+        ( &mut self $(, $arg:ident : $ty:ty )* $(,)? ),
+        $(-> $ret:ty)?,
+        @nobind
+    ) => {
     };
 }

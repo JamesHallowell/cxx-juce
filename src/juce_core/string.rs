@@ -6,6 +6,7 @@ define_juce_type! {
     cxx_name = "juce::JuceString",
     drop = juce::string_drop,
     default = juce::string_new,
+    clone = juce::string_clone,
 }
 
 impl JuceString {
@@ -100,6 +101,10 @@ mod juce {
         #[namespace = "cxx_juce"]
         #[cxx_name = "drop"]
         fn string_drop(self_: &mut JuceString);
+
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "construct"]
+        fn string_clone(self_: &JuceString) -> JuceString;
 
         #[cxx_name = "fromUTF8"]
         #[Self = "JuceString"]

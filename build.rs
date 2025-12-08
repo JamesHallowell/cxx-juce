@@ -24,7 +24,9 @@ fn main() {
         "src/juce_core/string.rs",
         "src/juce_core/system.rs",
         "src/juce_core/time.rs",
-        "src/lib.rs",
+        "src/juce_events/application.rs",
+        "src/juce_events/message_manager.rs",
+        "src/juce_events/mod.rs",
     ];
     for bridge in bridges.iter() {
         let _ = cxx_build::bridge(bridge);
@@ -92,11 +94,15 @@ fn main() {
         println!("cargo:rustc-link-lib=c++");
         println!("cargo:rustc-link-lib=framework=Accelerate");
         println!("cargo:rustc-link-lib=framework=AudioToolbox");
+        println!("cargo:rustc-link-lib=framework=AudioUnit");
         println!("cargo:rustc-link-lib=framework=Cocoa");
         println!("cargo:rustc-link-lib=framework=CoreAudio");
+        println!("cargo:rustc-link-lib=framework=CoreAudioKit");
         println!("cargo:rustc-link-lib=framework=CoreFoundation");
         println!("cargo:rustc-link-lib=framework=CoreMIDI");
+        println!("cargo:rustc-link-lib=framework=CoreVideo");
         println!("cargo:rustc-link-lib=framework=IOKit");
+        println!("cargo:rustc-link-lib=framework=QuartzCore");
     }
 
     if cfg!(target_os = "windows") {

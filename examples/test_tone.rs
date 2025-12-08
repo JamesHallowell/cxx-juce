@@ -5,6 +5,7 @@ use {
 
 fn main() -> Result<(), JuceError> {
     let juce = JUCE::initialise();
+
     let mut audio_device_manager = AudioDeviceManager::new(&juce);
     audio_device_manager.initialise(0, 2)?;
 

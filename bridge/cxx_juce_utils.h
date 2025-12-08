@@ -62,6 +62,13 @@ struct rust::IsRelocatable<cxx_juce::FatPtr<Deleter>> : std::true_type
 {
 };
 
+#define CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE_CUSTOM(TRAIT)            \
+    struct Drop##TRAIT                                             \
+    {                                                              \
+        void operator() (FatPtr<Drop##TRAIT>* ptr) const noexcept; \
+    };                                                             \
+    using BoxDyn##TRAIT = FatPtr<Drop##TRAIT>;
+
 #define CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE(TRAIT, CLASS)            \
     struct Drop##TRAIT                                             \
     {                                                              \

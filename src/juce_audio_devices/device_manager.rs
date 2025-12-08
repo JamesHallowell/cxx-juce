@@ -27,16 +27,14 @@ pub struct AudioCallbackHandle {
 pub struct AudioDeviceManager {
     device_manager: UniquePtr<juce::AudioDeviceManager>,
     callbacks: SlotMap<AudioCallbackKey, UniquePtr<AudioIODeviceCallback>>,
-    _juce: JUCE,
 }
 
 impl AudioDeviceManager {
     /// Create a new [`AudioDeviceManager`].
-    pub fn new(juce: &JUCE) -> Self {
+    pub fn new(_: &JUCE) -> Self {
         Self {
             device_manager: juce::make_audio_device_manager(),
             callbacks: SlotMap::with_key(),
-            _juce: juce.clone(),
         }
     }
 

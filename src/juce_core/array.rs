@@ -1,4 +1,4 @@
-use crate::{define_array_type, define_juce_type, juce_core::JuceString};
+use crate::{define_array_into_iter, define_array_type, define_juce_type, juce_core::JuceString};
 use std::iter::FromIterator;
 
 define_juce_type! {
@@ -12,8 +12,11 @@ define_juce_type! {
 define_array_type! {
     IntArray,
     i32,
+    IntArrayIter,
+    IntArrayIterRef,
     data = IntArray::data,
     from_slice = juce::int_array_new_from_slice,
+    add_ref = IntArray::add
 }
 
 define_juce_type! {
@@ -27,8 +30,11 @@ define_juce_type! {
 define_array_type! {
     FloatArray,
     f32,
+    FloatArrayIter,
+    FloatArrayIterRef,
     data = FloatArray::data,
     from_slice = juce::float_array_new_from_slice,
+    add_ref = FloatArray::add
 }
 
 define_juce_type! {
@@ -42,8 +48,11 @@ define_juce_type! {
 define_array_type! {
     DoubleArray,
     f64,
+    DoubleArrayIter,
+    DoubleArrayIterRef,
     data = DoubleArray::data,
     from_slice = juce::double_array_new_from_slice,
+    add_ref = DoubleArray::add
 }
 
 define_juce_type! {
@@ -59,56 +68,10 @@ define_juce_type! {
 define_array_type! {
     StringArray,
     JuceString,
+    StringArrayIter,
+    StringArrayIterRef,
     data = StringArray::data,
-}
-
-impl<I> FromIterator<I> for StringArray
-where
-    I: Into<JuceString>,
-{
-    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
-        let mut array = Self::default();
-        for item in iter {
-            array.add(item.into());
-        }
-        array
-    }
-}
-
-impl StringArray {
-    pub fn add(&mut self, string: impl Into<JuceString>) {
-        self.__add(string.into());
-    }
-}
-
-pub struct StringArrayIter<'a> {
-    array: &'a StringArray,
-    index: i32,
-}
-
-impl<'a> Iterator for StringArrayIter<'a> {
-    type Item = &'a juce::JuceString;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let index = self.index;
-        if index < self.array.size() {
-            self.index += 1;
-            Some(self.array.get_reference(index))
-        } else {
-            None
-        }
-    }
-}
-
-impl<'a> IntoIterator for &'a StringArray {
-    type Item = &'a juce::JuceString;
-    type IntoIter = StringArrayIter<'a>;
-    fn into_iter(self) -> Self::IntoIter {
-        StringArrayIter {
-            array: self,
-            index: 0,
-        }
-    }
+    add = StringArray::add,
 }
 
 pub(crate) use juce::ArrayLayout;
@@ -148,6 +111,8 @@ mod juce {
 
         fn size(self: &IntArray) -> i32;
 
+        fn add(self: &mut IntArray, value: &i32);
+
         type FloatArray = super::FloatArray;
 
         #[namespace = "cxx_juce"]
@@ -167,6 +132,8 @@ mod juce {
 
         fn size(self: &FloatArray) -> i32;
 
+        fn add(self: &mut FloatArray, value: &f32);
+
         type DoubleArray = super::DoubleArray;
 
         #[namespace = "cxx_juce"]
@@ -185,6 +152,8 @@ mod juce {
         fn data(self: &DoubleArray) -> *const f64;
 
         fn size(self: &DoubleArray) -> i32;
+
+        fn add(self: &mut DoubleArray, value: &f64);
 
         type StringArray = super::StringArray;
 
@@ -208,9 +177,8 @@ mod juce {
         #[cxx_name = "begin"]
         fn data(self: &StringArray) -> *const JuceString;
 
-        #[doc(hidden)]
         #[cxx_name = "add"]
-        fn __add(self: &mut StringArray, value: JuceString);
+        fn add(self: &mut StringArray, value: JuceString);
 
         #[cxx_name = "getReference"]
         fn get_reference(self: &StringArray, index: i32) -> &JuceString;
@@ -227,16 +195,16 @@ mod test {
     #[test]
     fn string_array_iter() {
         let mut array = StringArray::default();
-        array.add("Hello");
-        array.add("World");
-        array.add("!");
+        array.add("Hello".into());
+        array.add("World".into());
+        array.add("!".into());
 
         assert_eq!(array.size(), 3);
 
         let mut iter = array.into_iter();
-        assert_eq!(iter.next(), Some(&JuceString::new("Hello")));
-        assert_eq!(iter.next(), Some(&JuceString::new("World")));
-        assert_eq!(iter.next(), Some(&JuceString::new("!")));
+        assert_eq!(iter.next(), Some(JuceString::new("Hello")));
+        assert_eq!(iter.next(), Some(JuceString::new("World")));
+        assert_eq!(iter.next(), Some(JuceString::new("!")));
         assert_eq!(iter.next(), None);
     }
 
@@ -252,6 +220,27 @@ mod test {
     #[test]
     fn string_array_as_slice() {
         let array: StringArray = ["Hello", "World", "!"].into_iter().collect();
+
         assert_eq!(array.as_ref(), ["Hello", "World", "!"]);
+    }
+
+    #[test]
+    fn get_at_index() {
+        let array: IntArray = [1, 2, 3].into_iter().collect();
+
+        assert_eq!(array.get(0), Some(1));
+        assert_eq!(array.get(1), Some(2));
+        assert_eq!(array.get(2), Some(3));
+        assert_eq!(array.get(3), None);
+    }
+
+    #[test]
+    fn get_ref_at_index() {
+        let array: StringArray = ["A", "B", "C"].into_iter().collect();
+
+        assert_eq!(array.get_ref(0), Some(&JuceString::from("A")));
+        assert_eq!(array.get_ref(1), Some(&JuceString::from("B")));
+        assert_eq!(array.get_ref(2), Some(&JuceString::from("C")));
+        assert_eq!(array.get_ref(3), None);
     }
 }

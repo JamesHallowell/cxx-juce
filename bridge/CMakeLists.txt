@@ -33,6 +33,7 @@ target_compile_definitions(cxx-juce
         JUCE_USE_CURL=0
         JUCE_WEB_BROWSER=0
         JUCE_CHECK_MEMORY_LEAKS=0
+        JUCE_PLUGINHOST_AU=1
 )
 
 message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
@@ -54,6 +55,8 @@ target_sources(cxx-juce
         cxx_juce_audio_processors/cxx_juce_audio_processors.h
         cxx_juce_core/cxx_juce_core.cpp
         cxx_juce_core/cxx_juce_core.h
+        cxx_juce_events/cxx_juce_events.cpp
+        cxx_juce_events/cxx_juce_events.h
         cxx_juce_utils.h
         ${CXX_JUCE_BRIDGE_FILES}
 

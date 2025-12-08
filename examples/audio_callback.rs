@@ -80,6 +80,7 @@ impl AudioDeviceCallback for AudioCallback {
 
 fn main() -> Result<(), JuceError> {
     let juce = JUCE::initialise();
+
     let mut device_manager = AudioDeviceManager::new(&juce);
     device_manager.initialise(0, 2)?;
 

@@ -1,4 +1,4 @@
-use crate::{define_array_type, define_juce_type, juce_core::JuceString};
+use crate::{define_array_into_iter, define_juce_type, juce_core::JuceString};
 
 define_juce_type! {
     File,
@@ -29,10 +29,20 @@ define_juce_type! {
     drop = juce::file_search_path_drop,
 }
 
-define_array_type! {
-    FileSearchPath,
+define_array_into_iter! {
+    FileSearchPath => FileSearchPathIter,
     File,
-    index = juce::file_search_path_get,
+    FileSearchPath::get
+}
+
+impl FileSearchPath {
+    pub fn get(&self, index: i32) -> Option<File> {
+        if index < 0 || index >= self.size() {
+            return None;
+        }
+
+        Some(juce::file_search_path_get(self, index))
+    }
 }
 
 #[cxx::bridge(namespace = "juce")]
@@ -90,6 +100,9 @@ mod juce {
 
         #[cxx_name = "addIfNotAlreadyThere"]
         fn add(self: &mut FileSearchPath, file: &File) -> bool;
+
+        #[cxx_name = "toString"]
+        fn to_string(self: &FileSearchPath) -> JuceString;
     }
 }
 
@@ -105,6 +118,14 @@ mod test {
 
         assert_eq!(search_path.size(), 2);
 
-        assert_eq!(search_path.get(0), File::from_absolute_path("/foo/bar"));
+        assert_eq!(
+            search_path.get(0),
+            Some(File::from_absolute_path("/foo/bar"))
+        );
+        assert_eq!(
+            search_path.get(1),
+            Some(File::from_absolute_path("/bar/foo"))
+        );
+        assert_eq!(search_path.get(2), None);
     }
 }

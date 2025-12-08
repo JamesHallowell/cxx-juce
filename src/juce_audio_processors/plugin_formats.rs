@@ -2,6 +2,7 @@ use crate::{
     define_juce_type, define_trait,
     juce_audio_processors::{AudioPluginInstance, OwnedArrayPluginDescription, PluginDescription},
     juce_core::{FileSearchPath, JuceString, StringArray},
+    JUCE,
 };
 use cxx::UniquePtr;
 use std::pin::Pin;
@@ -10,11 +11,14 @@ define_juce_type! {
     AudioPluginFormatManager,
     layout = juce::AudioPluginFormatManagerLayout,
     cxx_name = "juce::AudioPluginFormatManager",
-    default = juce::audio_plugin_format_manager_new,
     drop = juce::audio_plugin_format_manager_drop,
 }
 
 impl AudioPluginFormatManager {
+    pub fn new(_: &JUCE) -> Self {
+        juce::audio_plugin_format_manager_new()
+    }
+
     pub fn get_format_ref(&self, index: i32) -> Option<&juce::AudioPluginFormat> {
         let ptr = self.get_format_raw(index);
         unsafe { ptr.as_ref() }
@@ -29,6 +33,14 @@ impl AudioPluginFormatManager {
         let boxed = Box::new(format);
         let wrapped = juce::wrap_audio_plugin_format(boxed);
         unsafe { self.add_format_raw(wrapped.into_raw()) }
+    }
+
+    pub fn for_each_format_mut(&mut self, mut func: impl FnMut(Pin<&mut juce::AudioPluginFormat>)) {
+        for i in 0..self.get_num_formats() {
+            if let Some(format) = self.get_format_mut(i) {
+                func(format);
+            }
+        }
     }
 }
 

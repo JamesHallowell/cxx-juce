@@ -1,10 +1,11 @@
 use crate::{
-    define_array_type, define_juce_type,
+    define_array_into_iter, define_juce_type,
     juce_core::{ArrayLayout, JuceString, Time},
 };
 use cxx::UniquePtr;
 
 define_juce_type! {
+    #[derive(Debug)]
     /// Description of a plugin.
     PluginDescription,
     fields = {
@@ -76,6 +77,7 @@ define_juce_type! {
     layout = juce::PluginDescriptionLayout,
     cxx_name = "juce::PluginDescription",
     default = juce::plugin_description_new,
+    clone = juce::plugin_description_clone,
 }
 
 define_juce_type! {
@@ -86,10 +88,10 @@ define_juce_type! {
     drop = juce::owned_array_plugin_description_drop,
 }
 
-define_array_type! {
-    OwnedArrayPluginDescription,
-    *mut PluginDescription,
-    data = OwnedArrayPluginDescription::data,
+define_array_into_iter! {
+    OwnedArrayPluginDescription => OwnedArrayPluginDescriptionIter,
+    ref PluginDescription,
+    OwnedArrayPluginDescription::get
 }
 
 impl OwnedArrayPluginDescription {
@@ -140,6 +142,10 @@ mod juce {
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]
         fn plugin_description_new() -> PluginDescription;
+
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "construct"]
+        fn plugin_description_clone(plugin: &PluginDescription) -> PluginDescription;
 
         #[cxx_name = "createIdentifierString"]
         fn create_identifier_string(self: &PluginDescription) -> JuceString;

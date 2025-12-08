@@ -1,12 +1,13 @@
 #pragma once
 
-#include <cxx_juce_core/cxx_juce_core.h>
 #include <cxx_juce_audio_basics/cxx_juce_audio_basics.h>
 #include <cxx_juce_audio_devices/cxx_juce_audio_devices.h>
 #include <cxx_juce_audio_processors/cxx_juce_audio_processors.h>
+#include <cxx_juce_core/cxx_juce_core.h>
+#include <cxx_juce_events/cxx_juce_events.h>
 
-#include <memory>
 #include <concepts>
+#include <memory>
 
 #include <rust/cxx.h>
 
