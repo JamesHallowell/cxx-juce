@@ -11,13 +11,11 @@ env:
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ macos-latest, windows-latest, ubuntu-latest ]
-
     steps:
       - uses: actions/checkout@v3
       - name: Install Linux dependencies
@@ -27,8 +25,29 @@ jobs:
           sudo apt install \
             libasound2-dev libjack-jackd2-dev \
             libfreetype-dev libfontconfig1-dev \
-            libx11-dev libxcomposite-dev libxcursor-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
       - name: Build
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
+
+  run-sanitizers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [ thread, address ]
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          sudo apt update
+          sudo apt install \
+            libasound2-dev libjack-jackd2-dev \
+            libfreetype-dev libfontconfig1-dev \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
+      - name: Install nightly toolchain
+        run: |
+          rustup toolchain install nightly
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+          rustup override set nightly
+      - run: RUSTFLAGS="-Z sanitizer=${{ matrix.sanitizer }}" cargo test -Z build-std --target x86_64-unknown-linux-gnu
