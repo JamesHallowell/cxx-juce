@@ -4,12 +4,18 @@ mod device;
 mod device_callback;
 mod device_manager;
 mod device_type;
+mod midi_device_info;
+mod midi_input;
+mod midi_output;
 
 pub use device::{AudioDevice, AudioIODevice, BoxDynAudioDevice};
 pub use device_callback::{AudioDeviceCallback, AudioIODeviceCallback, BoxDynAudioDeviceCallback};
 pub use device_manager::{AudioDeviceManager, AudioDeviceSetup, ChannelCount};
 pub use device_type::{AudioDeviceType, AudioIODeviceType, BoxDynAudioDeviceType};
 pub use juce::SystemAudioVolume;
+pub use midi_device_info::{MidiDeviceInfo, MidiDeviceInfoArray};
+pub use midi_input::{MidiInput, MidiInputWithCallback};
+pub use midi_output::MidiOutput;
 
 #[cxx::bridge(namespace = "juce")]
 mod juce {

@@ -7,26 +7,32 @@ use crate::{
     JuceError, JUCE,
 };
 use cxx::UniquePtr;
-use slotmap::SlotMap;
 use std::{
+    collections::HashMap,
     ffi::{c_double, c_int},
     pin::Pin,
+    sync::atomic::{AtomicU64, Ordering},
 };
-
-slotmap::new_key_type! {
-    struct AudioCallbackKey;
-}
 
 /// A handle to a registered audio callback.
 #[must_use]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct AudioCallbackHandle {
-    key: AudioCallbackKey,
+    key: u64,
+}
+
+impl AudioCallbackHandle {
+    fn get() -> AudioCallbackHandle {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let next = NEXT.fetch_add(1, Ordering::Relaxed);
+        AudioCallbackHandle { key: next }
+    }
 }
 
 /// Manages the state of an audio device.
 pub struct AudioDeviceManager {
     device_manager: UniquePtr<juce::AudioDeviceManager>,
-    callbacks: SlotMap<AudioCallbackKey, UniquePtr<AudioIODeviceCallback>>,
+    callbacks: HashMap<AudioCallbackHandle, UniquePtr<AudioIODeviceCallback>>,
 }
 
 impl AudioDeviceManager {
@@ -34,7 +40,7 @@ impl AudioDeviceManager {
     pub fn new(_: &JUCE) -> Self {
         Self {
             device_manager: juce::make_audio_device_manager(),
-            callbacks: SlotMap::with_key(),
+            callbacks: HashMap::default(),
         }
     }
 
@@ -135,14 +141,14 @@ impl AudioDeviceManager {
                 .add_audio_callback(callback.as_mut_ptr());
         }
 
-        let key = self.callbacks.insert(callback);
-
-        AudioCallbackHandle { key }
+        let handle = AudioCallbackHandle::get();
+        self.callbacks.insert(handle, callback);
+        handle
     }
 
     /// Removes an audio callback.
     pub fn remove_audio_callback(&mut self, handle: AudioCallbackHandle) {
-        if let Some(callback) = self.callbacks.remove(handle.key) {
+        if let Some(callback) = self.callbacks.remove(&handle) {
             unsafe {
                 self.device_manager
                     .pin_mut()

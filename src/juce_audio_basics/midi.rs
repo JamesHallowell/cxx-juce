@@ -4,8 +4,8 @@ define_juce_type! {
     MidiBuffer,
     layout = juce::MidiBufferLayout,
     cxx_name = "juce::MidiBuffer",
-    drop = juce::midi_buffer_drop,
     default = juce::midi_buffer_new,
+    drop = juce::midi_buffer_drop,
 }
 
 define_juce_type! {
@@ -13,14 +13,23 @@ define_juce_type! {
     layout = juce::MidiMessageLayout,
     cxx_name = "juce::MidiMessage",
     drop = juce::midi_message_drop,
+    clone = juce::midi_message_clone,
+}
+
+unsafe impl Send for MidiMessage {}
+
+impl std::fmt::Debug for MidiMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_description())
+    }
 }
 
 define_juce_type! {
     MidiFile,
     layout = juce::MidiFileLayout,
     cxx_name = "juce::MidiFile",
-    drop = juce::midi_file_drop,
     default = juce::midi_file_new,
+    drop = juce::midi_file_drop,
 }
 
 #[cxx::bridge(namespace = "juce")]
@@ -42,6 +51,8 @@ mod juce {
 
     unsafe extern "C++" {
         include!("cxx_juce.h");
+
+        type JuceString = crate::juce_core::JuceString;
 
         type MidiBuffer = super::MidiBuffer;
 
@@ -73,6 +84,10 @@ mod juce {
         #[cxx_name = "drop"]
         fn midi_message_drop(msg: &mut MidiMessage);
 
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "construct"]
+        fn midi_message_clone(message: &MidiMessage) -> MidiMessage;
+
         #[cxx_name = "noteOn"]
         #[Self = "MidiMessage"]
         fn note_on(channel: i32, note_number: i32, velocity: f32) -> MidiMessage;
@@ -80,6 +95,9 @@ mod juce {
         #[cxx_name = "noteOff"]
         #[Self = "MidiMessage"]
         fn note_off(channel: i32, note_number: i32, velocity: f32) -> MidiMessage;
+
+        #[cxx_name = "getDescription"]
+        fn get_description(self: &MidiMessage) -> JuceString;
 
         #[cxx_name = "isNoteOn"]
         fn is_note_on(self: &MidiMessage, return_true_for_note_on_velocity_zero: bool) -> bool;
@@ -98,6 +116,9 @@ mod juce {
 
         #[cxx_name = "getFloatVelocity"]
         fn get_float_velocity(self: &MidiMessage) -> f32;
+
+        #[cxx_name = "getTimeStamp"]
+        fn get_time_stamp(self: &MidiMessage) -> f64;
 
         type MidiFile = super::MidiFile;
 
@@ -174,5 +195,13 @@ mod test {
         buffer.clear();
         assert!(buffer.is_empty());
         assert_eq!(buffer.get_num_events(), 0);
+    }
+
+    #[test]
+    fn debugging_midi_message() {
+        assert_eq!(
+            format!("{:?}", MidiMessage::note_on(1, 60, 0.8)),
+            "Note on C3 Velocity 102 Channel 1"
+        );
     }
 }

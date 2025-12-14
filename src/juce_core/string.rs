@@ -92,7 +92,7 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
-        type JuceString = super::JuceString;
+        type JuceString = crate::juce_core::JuceString;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]

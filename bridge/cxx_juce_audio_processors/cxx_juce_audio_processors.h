@@ -12,11 +12,11 @@ using OwnedArrayPluginDescription = OwnedArray<PluginDescription>;
 
 namespace cxx_juce
 {
-juce::String audioProcessorGetName (const juce::AudioProcessor& processor) noexcept;
+juce::String audioProcessorGetName(const juce::AudioProcessor& processor) noexcept;
 
-CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE (AudioPluginFormat, juce::AudioPluginFormat)
-CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE (AudioPlugin, juce::AudioPluginInstance)
+CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE(AudioPluginFormat, juce::AudioPluginFormat)
+CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE(AudioPlugin, juce::AudioPluginInstance)
 } // namespace cxx_juce
 
-CXX_JUCE_DECLARE_RELOCATABLE (AudioPluginFormatManager)
-CXX_JUCE_DECLARE_RELOCATABLE (PluginDescription)
+CXX_JUCE_DECLARE_RELOCATABLE(AudioPluginFormatManager)
+CXX_JUCE_DECLARE_RELOCATABLE(PluginDescription)

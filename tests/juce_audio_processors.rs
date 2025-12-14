@@ -144,7 +144,7 @@ fn creating_an_instance_of_an_audio_plugin() {
     format
         .as_mut()
         .find_all_types_for_file(&mut results, &JuceString::default());
-    assert_eq!(results.size(), 1);
+    assert_eq!(results.len(), 1);
 
     let description = results.get(0).expect("no description found");
     assert_eq!(description.name, "Mock Plugin");
