@@ -171,7 +171,8 @@ mod juce {
             index: i32,
         ) -> *mut PluginDescription;
 
-        fn size(self: &OwnedArrayPluginDescription) -> i32;
+        #[cxx_name = "size"]
+        fn len(self: &OwnedArrayPluginDescription) -> i32;
 
         fn data(self: &OwnedArrayPluginDescription) -> *const *mut PluginDescription;
     }

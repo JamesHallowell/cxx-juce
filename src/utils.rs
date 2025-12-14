@@ -201,8 +201,12 @@ macro_rules! define_array_type {
         ),* $(,)?
     ) => {
         impl $name {
-            pub fn get_ref(&self, index: i32) -> Option<&$ty> {
-                if index < 0 || index >= self.size() {
+            pub fn is_empty(&self) -> bool {
+                self.len() == 0
+            }
+
+            pub fn get(&self, index: i32) -> Option<&$ty> {
+                if index < 0 || index >= self.len() {
                     return None;
                 }
 
@@ -211,16 +215,19 @@ macro_rules! define_array_type {
                 unsafe { data.offset(index).as_ref() }
             }
 
-            pub fn get(&self, index: i32) -> Option<$ty> {
-                self.get_ref(index).cloned()
-            }
-
             pub fn as_slice(&self) -> &[$ty] {
                 let data = $data(self);
-                self.size()
+                self.len()
                     .try_into()
-                    .map(|size| unsafe { std::slice::from_raw_parts(data, size) })
+                    .map(|len| unsafe { std::slice::from_raw_parts(data, len) })
                     .unwrap_or_default()
+            }
+        }
+
+        impl std::ops::Index<i32> for $name {
+            type Output = $ty;
+            fn index(&self, index: i32) -> &Self::Output {
+                self.get(index).unwrap()
             }
         }
 
@@ -236,16 +243,16 @@ macro_rules! define_array_type {
             }
         }
 
-        define_array_into_iter! {
+        $crate::define_array_into_iter! {
             $name => $iter,
             $ty,
             $name::get
         }
 
-        define_array_into_iter! {
+        $crate::define_array_into_iter! {
             $name => $iter_ref,
             ref $ty,
-            $name::get_ref
+            $name::get
         }
 
         $(
@@ -313,8 +320,8 @@ macro_rules! define_array_into_iter {
             fn next(&mut self) -> Option<Self::Item> {
                 let index = self.index;
                 self.index += 1;
-                if index < self.array.size() {
-                    $get(&self.array, index)
+                if index < self.array.len() {
+                    $get(&self.array, index).cloned()
                 } else {
                     None
                 }
@@ -349,7 +356,7 @@ macro_rules! define_array_into_iter {
             fn next(&mut self) -> Option<Self::Item> {
                 let index = self.index;
                 self.index += 1;
-                if index < self.array.size() {
+                if index < self.array.len() {
                     $get(&self.array, index)
                 } else {
                     None

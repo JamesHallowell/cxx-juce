@@ -8,7 +8,7 @@ namespace cxx_juce
 {
 CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (CallAsyncCallback)
 CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (JuceApplicationBase)
-}
+} // namespace cxx_juce
 
 namespace
 {
@@ -19,7 +19,7 @@ struct JuceApplicationBase : juce::JUCEApplicationBase, juce::MultiTimer
     {
     }
 
-    static JuceApplicationBase* get ()
+    static JuceApplicationBase* get()
     {
         return dynamic_cast<JuceApplicationBase*> (juce::JUCEApplicationBase::getInstance());
     }
@@ -74,14 +74,14 @@ struct JuceApplicationBase : juce::JUCEApplicationBase, juce::MultiTimer
         cxx_juce::JuceApplicationBaseImpl::unhandledException (_app);
     }
 
-    void timerCallback(int timerID) override
+    void timerCallback (int timerID) override
     {
         cxx_juce::JuceApplicationBaseImpl::timerCallback (_app, timerID);
     }
 
     cxx_juce::BoxDynJuceApplicationBase _app;
 };
-}
+} // namespace
 
 namespace cxx_juce
 {
@@ -93,22 +93,22 @@ void callAsync (BoxDynCallAsyncCallback callback)
                                      { CallAsyncCallbackImpl::call (*callbackPtr); });
 }
 
-bool hasStopMessageBeenSent ()
+bool hasStopMessageBeenSent()
 {
     const auto* instance = juce::MessageManager::getInstanceWithoutCreating();
-    return instance ? instance->hasStopMessageBeenSent () : true;
+    return instance ? instance->hasStopMessageBeenSent() : true;
 }
 
 std::unique_ptr<juce::JUCEApplicationBase> wrap (BoxDynJuceApplicationBase app) noexcept
 {
-    juce::JUCEApplicationBase::createInstance = [] () -> juce::JUCEApplicationBase*
+    juce::JUCEApplicationBase::createInstance = []() -> juce::JUCEApplicationBase*
     {
         return nullptr;
     };
     return std::make_unique<JuceApplicationBase> (std::move (app));
 }
 
-int runApp ()
+int runApp()
 {
     juce::JUCEApplicationBase::createInstance = []
     {

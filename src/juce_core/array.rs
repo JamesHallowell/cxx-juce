@@ -1,4 +1,4 @@
-use crate::{define_array_into_iter, define_array_type, define_juce_type, juce_core::JuceString};
+use crate::{define_array_type, define_juce_type, juce_core::JuceString};
 use std::iter::FromIterator;
 
 define_juce_type! {
@@ -109,7 +109,8 @@ mod juce {
         #[cxx_name = "getRawDataPointer"]
         fn data(self: &IntArray) -> *const i32;
 
-        fn size(self: &IntArray) -> i32;
+        #[cxx_name = "size"]
+        fn len(self: &IntArray) -> i32;
 
         fn add(self: &mut IntArray, value: &i32);
 
@@ -130,7 +131,8 @@ mod juce {
         #[cxx_name = "getRawDataPointer"]
         fn data(self: &FloatArray) -> *const f32;
 
-        fn size(self: &FloatArray) -> i32;
+        #[cxx_name = "size"]
+        fn len(self: &FloatArray) -> i32;
 
         fn add(self: &mut FloatArray, value: &f32);
 
@@ -151,7 +153,8 @@ mod juce {
         #[cxx_name = "getRawDataPointer"]
         fn data(self: &DoubleArray) -> *const f64;
 
-        fn size(self: &DoubleArray) -> i32;
+        #[cxx_name = "size"]
+        fn len(self: &DoubleArray) -> i32;
 
         fn add(self: &mut DoubleArray, value: &f64);
 
@@ -183,7 +186,8 @@ mod juce {
         #[cxx_name = "getReference"]
         fn get_reference(self: &StringArray, index: i32) -> &JuceString;
 
-        fn size(self: &StringArray) -> i32;
+        #[cxx_name = "size"]
+        fn len(self: &StringArray) -> i32;
     }
 }
 
@@ -199,7 +203,7 @@ mod test {
         array.add("World".into());
         array.add("!".into());
 
-        assert_eq!(array.size(), 3);
+        assert_eq!(array.len(), 3);
 
         let mut iter = array.into_iter();
         assert_eq!(iter.next(), Some(JuceString::new("Hello")));
@@ -213,7 +217,7 @@ mod test {
         let array = [1, 2, 3];
         let array = juce::IntArray::from(array.as_slice());
 
-        assert_eq!(array.size(), 3);
+        assert_eq!(array.len(), 3);
         assert_eq!(array.as_ref(), &[1, 2, 3]);
     }
 
@@ -228,9 +232,9 @@ mod test {
     fn get_at_index() {
         let array: IntArray = [1, 2, 3].into_iter().collect();
 
-        assert_eq!(array.get(0), Some(1));
-        assert_eq!(array.get(1), Some(2));
-        assert_eq!(array.get(2), Some(3));
+        assert_eq!(array.get(0), Some(&1));
+        assert_eq!(array.get(1), Some(&2));
+        assert_eq!(array.get(2), Some(&3));
         assert_eq!(array.get(3), None);
     }
 
@@ -238,9 +242,9 @@ mod test {
     fn get_ref_at_index() {
         let array: StringArray = ["A", "B", "C"].into_iter().collect();
 
-        assert_eq!(array.get_ref(0), Some(&JuceString::from("A")));
-        assert_eq!(array.get_ref(1), Some(&JuceString::from("B")));
-        assert_eq!(array.get_ref(2), Some(&JuceString::from("C")));
-        assert_eq!(array.get_ref(3), None);
+        assert_eq!(array.get(0), Some(&JuceString::from("A")));
+        assert_eq!(array.get(1), Some(&JuceString::from("B")));
+        assert_eq!(array.get(2), Some(&JuceString::from("C")));
+        assert_eq!(array.get(3), None);
     }
 }

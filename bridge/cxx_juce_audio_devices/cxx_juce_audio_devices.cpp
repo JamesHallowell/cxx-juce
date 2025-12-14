@@ -4,6 +4,9 @@
 #include <cxx-juce/src/juce_audio_devices/device_callback.rs.h>
 #include <cxx-juce/src/juce_audio_devices/device_manager.rs.h>
 #include <cxx-juce/src/juce_audio_devices/device_type.rs.h>
+#include <cxx-juce/src/juce_audio_devices/midi_device_info.rs.h>
+#include <cxx-juce/src/juce_audio_devices/midi_input.rs.h>
+#include <cxx-juce/src/juce_audio_devices/midi_output.rs.h>
 
 #include <cxx_juce_utils.h>
 
@@ -17,11 +20,16 @@ CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, useDefaultInputChannels, UseDefa
 CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, outputChannels, OutputChannelsOffset)
 CXX_JUCE_ASSERT_FIELD_OFFSET (AudioDeviceSetup, useDefaultOutputChannels, UseDefaultOutputChannelsOffset)
 
+CXX_JUCE_ASSERT_SIZE_ALIGN (MidiDeviceInfo)
+CXX_JUCE_ASSERT_FIELD_OFFSET (MidiDeviceInfo, name, NameOffset)
+CXX_JUCE_ASSERT_FIELD_OFFSET (MidiDeviceInfo, identifier, IdentifierOffset)
+
 namespace cxx_juce
 {
 CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioDevice)
 CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioDeviceCallback)
 CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (AudioDeviceType)
+CXX_JUCE_DEFINE_BOXED_TRAIT_TYPE (MidiInputCallback)
 
 std::unique_ptr<juce::AudioIODevice> wrap (BoxDynAudioDevice device) noexcept
 {
@@ -267,5 +275,28 @@ std::unique_ptr<juce::AudioIODeviceType> wrap (BoxDynAudioDeviceType deviceType)
     };
 
     return std::make_unique<AudioDeviceType> (std::move (deviceType));
+}
+
+std::unique_ptr<juce::MidiInputCallback> wrap (BoxDynMidiInputCallback callback) noexcept
+{
+    struct MidiInputCallback : juce::MidiInputCallback
+    {
+        explicit MidiInputCallback (BoxDynMidiInputCallback callback)
+            : _callback { std::move (callback) }
+        {
+        }
+
+        void handleIncomingMidiMessage (juce::MidiInput*,
+                                        const juce::MidiMessage& message) override
+        {
+            MidiInputCallbackImpl::handle_incoming_midi_message (
+                _callback,
+                message);
+        }
+
+        BoxDynMidiInputCallback _callback;
+    };
+
+    return std::make_unique<MidiInputCallback> (std::move (callback));
 }
 } // namespace cxx_juce

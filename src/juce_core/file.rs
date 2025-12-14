@@ -1,4 +1,4 @@
-use crate::{define_array_into_iter, define_juce_type, juce_core::JuceString};
+use crate::{define_juce_type, juce_core::JuceString};
 
 define_juce_type! {
     File,
@@ -7,6 +7,7 @@ define_juce_type! {
     default = juce::file_new,
     drop = juce::file_drop,
     equality = juce::file_equality,
+    clone = juce::file_clone,
 }
 
 impl std::fmt::Debug for File {
@@ -29,19 +30,44 @@ define_juce_type! {
     drop = juce::file_search_path_drop,
 }
 
-define_array_into_iter! {
-    FileSearchPath => FileSearchPathIter,
-    File,
-    FileSearchPath::get
-}
-
 impl FileSearchPath {
     pub fn get(&self, index: i32) -> Option<File> {
-        if index < 0 || index >= self.size() {
+        if index < 0 || index >= self.len() {
             return None;
         }
 
         Some(juce::file_search_path_get(self, index))
+    }
+}
+
+pub struct FileSearchPathIter {
+    array: FileSearchPath,
+    index: i32,
+}
+
+impl Iterator for FileSearchPathIter {
+    type Item = File;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let index = self.index;
+        self.index += 1;
+        if index < self.array.len() {
+            self.array.get(index)
+        } else {
+            None
+        }
+    }
+}
+
+impl IntoIterator for FileSearchPath {
+    type Item = File;
+    type IntoIter = FileSearchPathIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter {
+            array: self,
+            index: 0,
+        }
     }
 }
 
@@ -78,6 +104,10 @@ mod juce {
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]
+        fn file_clone(other: &File) -> File;
+
+        #[namespace = "cxx_juce"]
+        #[cxx_name = "construct"]
         fn from_absolute_path(path: &JuceString) -> File;
 
         #[cxx_name = "getFullPathName"]
@@ -92,7 +122,7 @@ mod juce {
         fn file_search_path_drop(self_: &mut FileSearchPath);
 
         #[cxx_name = "getNumPaths"]
-        fn size(self: &FileSearchPath) -> i32;
+        fn len(self: &FileSearchPath) -> i32;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "index"]
@@ -116,7 +146,7 @@ mod test {
         search_path.add(&File::from_absolute_path("/foo/bar"));
         search_path.add(&File::from_absolute_path("/bar/foo"));
 
-        assert_eq!(search_path.size(), 2);
+        assert_eq!(search_path.len(), 2);
 
         assert_eq!(
             search_path.get(0),
