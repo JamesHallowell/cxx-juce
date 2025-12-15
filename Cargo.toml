@@ -14,5 +14,5 @@ asio = []
 cxx = "1.0.188"
 
 [build-dependencies]
-cmake = "0.1.50"
+cmake = "0.1.56"
 cxx-build = "1.0.188"
