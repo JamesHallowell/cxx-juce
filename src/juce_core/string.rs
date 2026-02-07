@@ -7,6 +7,8 @@ define_juce_type! {
     drop = juce::string_drop,
     default = juce::string_new,
     clone = juce::string_clone,
+    debug = JuceString::as_ref,
+    equality = juce::string_eq,
 }
 
 impl JuceString {
@@ -44,18 +46,6 @@ impl From<&str> for JuceString {
 impl std::fmt::Display for JuceString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_ref())
-    }
-}
-
-impl std::fmt::Debug for JuceString {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.as_ref())
-    }
-}
-
-impl PartialEq for JuceString {
-    fn eq(&self, other: &Self) -> bool {
-        juce::eq_string(self, other)
     }
 }
 
@@ -114,8 +104,8 @@ mod juce {
         fn is_empty(self: &JuceString) -> bool;
 
         #[namespace = "cxx_juce"]
-        #[rust_name = "eq_string"]
-        fn eq(a: &JuceString, b: &JuceString) -> bool;
+        #[cxx_name = "eq"]
+        fn string_eq(a: &JuceString, b: &JuceString) -> bool;
 
         #[cxx_name = "toUTF8"]
         fn to_utf8(self: &JuceString) -> CharPointerUTF8;

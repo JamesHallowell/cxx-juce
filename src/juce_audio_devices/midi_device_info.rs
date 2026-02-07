@@ -4,7 +4,7 @@ use crate::{
 };
 
 define_juce_type! {
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     /// Information about a MIDI device
     MidiDeviceInfo,
     fields = {
@@ -18,7 +18,6 @@ define_juce_type! {
     layout = juce::MidiDeviceInfoLayout,
     cxx_name = "juce::MidiDeviceInfo",
     default = juce::midi_device_info_new,
-    clone = juce::midi_device_info_clone,
 }
 
 impl std::fmt::Display for MidiDeviceInfo {
@@ -35,8 +34,7 @@ define_juce_type! {
 }
 
 define_array_type! {
-    MidiDeviceInfoArray,
-    MidiDeviceInfo,
+    MidiDeviceInfoArray<MidiDeviceInfo>,
     MidiDeviceInfoArrayIter,
     MidiDeviceInfoArrayIterRef,
     data = MidiDeviceInfoArray::data,
@@ -62,10 +60,6 @@ mod juce {
         #[namespace = "cxx_juce"]
         #[cxx_name = "construct"]
         fn midi_device_info_new() -> MidiDeviceInfo;
-
-        #[namespace = "cxx_juce"]
-        #[cxx_name = "construct"]
-        fn midi_device_info_clone(info: &MidiDeviceInfo) -> MidiDeviceInfo;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "drop"]

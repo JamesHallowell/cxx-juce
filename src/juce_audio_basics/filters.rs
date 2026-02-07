@@ -5,6 +5,7 @@ define_juce_type! {
     layout = juce::IIRCoefficientsLayout,
     cxx_name = "juce::IIRCoefficients",
     drop = juce::iir_coefficients_drop,
+    send,
 }
 
 define_juce_type! {
@@ -13,9 +14,8 @@ define_juce_type! {
     cxx_name = "juce::SingleThreadedIIRFilter",
     drop = juce::single_threaded_iir_filter_drop,
     default = juce::single_threaded_iir_filter_new,
+    send,
 }
-
-unsafe impl Send for SingleThreadedIIRFilter {}
 
 impl SingleThreadedIIRFilter {
     /// Filter the given samples.

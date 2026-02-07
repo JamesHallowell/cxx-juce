@@ -66,7 +66,7 @@ macro_rules! define_juce_type {
         $(#[$type_attr:meta])* $name:ident,
         layout = $layout:ty,
         $(
-            $key:ident = $value:expr
+            $key:ident $(= $value:expr)*
         ),* $(,)?
     ) => {
         #[repr(C)]
@@ -79,7 +79,7 @@ macro_rules! define_juce_type {
         $crate::static_assert_size_and_alignment!($name, $layout);
 
         $(
-            $crate::define_juce_type!(@prop $name, $key, $value);
+            $crate::define_juce_type!(@prop $name, $key $(, $value)*);
         )*
     };
     (
@@ -96,7 +96,7 @@ macro_rules! define_juce_type {
         },
         layout = $layout:ty,
         $(
-            $key:ident = $value:expr
+            $key:ident $(= $value:expr)*
         ),* $(,)?
     ) => {
         #[repr(C)]
@@ -119,7 +119,7 @@ macro_rules! define_juce_type {
         )*
 
         $(
-            $crate::define_juce_type!(@prop $name, $key, $value);
+            $crate::define_juce_type!(@prop $name, $key $(, $value)*);
         )*
 
         $(
@@ -143,10 +143,20 @@ macro_rules! define_juce_type {
             }
         }
     };
+    (@prop $name:ident, send) => {
+        unsafe impl Send for $name {}
+    };
     (@prop $name:ident, default, $default:expr) => {
         impl Default for $name {
             fn default() -> Self {
                 ($default)()
+            }
+        }
+    };
+    (@prop $name:ident, debug, $debug:expr) => {
+        impl std::fmt::Debug for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:?}", ($debug)(self))
             }
         }
     };
@@ -191,8 +201,7 @@ macro_rules! define_juce_type {
 #[macro_export]
 macro_rules! define_array_type {
     (
-        $name:ident,
-        $ty:ty,
+        $name:ident<$ty:ty>,
         $iter:ident,
         $iter_ref:ident,
         data = $data:path,
@@ -234,12 +243,6 @@ macro_rules! define_array_type {
         impl AsRef<[$ty]> for $name {
             fn as_ref(&self) -> &[$ty] {
                 self.as_slice()
-            }
-        }
-
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{:?}", self.as_ref())
             }
         }
 

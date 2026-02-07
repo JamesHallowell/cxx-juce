@@ -14,14 +14,8 @@ define_juce_type! {
     cxx_name = "juce::MidiMessage",
     drop = juce::midi_message_drop,
     clone = juce::midi_message_clone,
-}
-
-unsafe impl Send for MidiMessage {}
-
-impl std::fmt::Debug for MidiMessage {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_description())
-    }
+    send,
+    debug = MidiMessage::get_description,
 }
 
 define_juce_type! {
@@ -201,7 +195,7 @@ mod test {
     fn debugging_midi_message() {
         assert_eq!(
             format!("{:?}", MidiMessage::note_on(1, 60, 0.8)),
-            "Note on C3 Velocity 102 Channel 1"
+            "\"Note on C3 Velocity 102 Channel 1\""
         );
     }
 }

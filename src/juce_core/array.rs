@@ -7,16 +7,16 @@ define_juce_type! {
     cxx_name = "juce::IntArray",
     default = juce::int_array_new,
     drop = juce::int_array_drop,
+    debug = Self::as_ref,
 }
 
 define_array_type! {
-    IntArray,
-    i32,
+    IntArray<i32>,
     IntArrayIter,
     IntArrayIterRef,
-    data = IntArray::data,
+    data = Self::data,
     from_slice = juce::int_array_new_from_slice,
-    add_ref = IntArray::add
+    add_ref = Self::add
 }
 
 define_juce_type! {
@@ -25,16 +25,16 @@ define_juce_type! {
     cxx_name = "juce::FloatArray",
     default = juce::float_array_new,
     drop = juce::float_array_drop,
+    debug = Self::as_ref,
 }
 
 define_array_type! {
-    FloatArray,
-    f32,
+    FloatArray<f32>,
     FloatArrayIter,
     FloatArrayIterRef,
-    data = FloatArray::data,
+    data = Self::data,
     from_slice = juce::float_array_new_from_slice,
-    add_ref = FloatArray::add
+    add_ref = Self::add,
 }
 
 define_juce_type! {
@@ -43,16 +43,16 @@ define_juce_type! {
     cxx_name = "juce::DoubleArray",
     default = juce::double_array_new,
     drop = juce::double_array_drop,
+    debug = Self::as_ref,
 }
 
 define_array_type! {
-    DoubleArray,
-    f64,
+    DoubleArray<f64>,
     DoubleArrayIter,
     DoubleArrayIterRef,
-    data = DoubleArray::data,
+    data = Self::data,
     from_slice = juce::double_array_new_from_slice,
-    add_ref = DoubleArray::add
+    add_ref = Self::add
 }
 
 define_juce_type! {
@@ -62,16 +62,16 @@ define_juce_type! {
     drop = juce::string_array_drop,
     default = juce::string_array_new,
     clone = juce::string_array_clone,
-    equality = juce::string_array_equality
+    equality = juce::string_array_equality,
+    debug = Self::as_ref,
 }
 
 define_array_type! {
-    StringArray,
-    JuceString,
+    StringArray<JuceString>,
     StringArrayIter,
     StringArrayIterRef,
-    data = StringArray::data,
-    add = StringArray::add,
+    data = Self::data,
+    add = Self::add,
 }
 
 pub(crate) use juce::ArrayLayout;
@@ -246,5 +246,11 @@ mod test {
         assert_eq!(array.get(1), Some(&JuceString::from("B")));
         assert_eq!(array.get(2), Some(&JuceString::from("C")));
         assert_eq!(array.get(3), None);
+    }
+
+    #[test]
+    fn debug_arrays() {
+        let array: IntArray = [1, 2, 3].into_iter().collect();
+        assert_eq!(format!("{array:?}"), "[1, 2, 3]");
     }
 }

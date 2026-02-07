@@ -8,12 +8,7 @@ define_juce_type! {
     drop = juce::file_drop,
     equality = juce::file_equality,
     clone = juce::file_clone,
-}
-
-impl std::fmt::Debug for File {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self.get_full_path_name())
-    }
+    debug = File::get_full_path_name,
 }
 
 impl File {

@@ -2,9 +2,12 @@ use crate::define_juce_type;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 define_juce_type! {
+    #[derive(Copy, Clone)]
     Time,
     layout = juce::TimeLayout,
     cxx_name = "juce::Time",
+    send,
+    debug = Time::to_milliseconds,
 }
 
 impl Time {
@@ -36,23 +39,9 @@ impl From<Time> for SystemTime {
     }
 }
 
-impl Copy for Time {}
-
-impl Clone for Time {
-    fn clone(&self) -> Time {
-        *self
-    }
-}
-
 impl PartialEq<Time> for Time {
     fn eq(&self, other: &Time) -> bool {
         self.to_milliseconds() == other.to_milliseconds()
-    }
-}
-
-impl std::fmt::Debug for Time {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self.to_milliseconds())
     }
 }
 

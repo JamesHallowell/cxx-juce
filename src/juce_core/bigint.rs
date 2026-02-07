@@ -8,6 +8,12 @@ define_juce_type! {
     default = juce::big_integer_new,
 }
 
+impl std::fmt::Debug for BigInteger {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.to_string(16, 2))
+    }
+}
+
 #[cxx::bridge(namespace = "juce")]
 mod juce {
     enum BigIntegerLayout {
@@ -18,6 +24,7 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
+        type JuceString = crate::juce_core::JuceString;
         type BigInteger = super::BigInteger;
 
         #[namespace = "cxx_juce"]
@@ -40,6 +47,9 @@ mod juce {
             num_bits: i32,
             should_be_set: bool,
         ) -> &mut BigInteger;
+
+        #[cxx_name = "toString"]
+        fn to_string(self: &BigInteger, base: i32, min_chars: i32) -> JuceString;
     }
 }
 
@@ -57,5 +67,37 @@ mod test {
 
         integer.clear().set_range(0, 3, true);
         assert_eq!(integer.count_number_of_set_bits(), 3);
+    }
+
+    #[test]
+    fn to_string() {
+        let mut integer = BigInteger::default();
+
+        assert_eq!(integer.to_string(10, 1), "0");
+
+        integer.set_range(0, 2, true);
+
+        assert_eq!(integer.to_string(10, 1), "3");
+        assert_eq!(integer.to_string(16, 2), "03");
+
+        integer.set_range(0, 4, true);
+
+        assert_eq!(integer.to_string(10, 1), "15");
+        assert_eq!(integer.to_string(16, 1), "f");
+    }
+
+    #[test]
+    fn debug() {
+        let mut integer = BigInteger::default();
+        assert_eq!(format!("{integer:?}"), "00");
+
+        integer.set_range(0, 3, true);
+        assert_eq!(format!("{integer:?}"), "07");
+
+        integer.set_range(0, 8, true);
+        assert_eq!(format!("{integer:?}"), "ff");
+
+        integer.set_range(0, 12, true);
+        assert_eq!(format!("{integer:?}"), "fff");
     }
 }
