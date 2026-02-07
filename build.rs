@@ -48,6 +48,10 @@ fn main() {
             .collect::<Vec<_>>()
             .join(";"),
     );
+    cmake.define(
+        "CXX_JUCE_BRIDGE_INCLUDE_DIR",
+        format!("{}/cxxbridge/include", out_dir),
+    );
 
     if cfg!(feature = "asio") {
         cmake.define("CXX_JUCE_USE_ASIO", "ON");

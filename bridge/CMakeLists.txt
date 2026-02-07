@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(cxx-juce VERSION 0.1)
 
-set(CXX_JUCE_BINDINGS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../target/cxxbridge" CACHE PATH "Path to the bindings directory")
+set(CXX_JUCE_BRIDGE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../target/cxxbridge" CACHE PATH "Path to the bindings include directory")
 set(CXX_JUCE_BRIDGE_FILES "" CACHE STRING "A list of bridge files to build")
 
 set(CXX_JUCE_USE_ASIO OFF CACHE BOOL "Use ASIO")
@@ -36,12 +36,12 @@ target_compile_definitions(cxx-juce
         JUCE_PLUGINHOST_AU=1
 )
 
-message(STATUS "Using bindings at ${CXX_JUCE_BINDINGS_DIR}")
+message(STATUS "Using bridge at ${CXX_JUCE_BRIDGE_INCLUDE_DIR}")
 
 target_include_directories(cxx-juce
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CXX_JUCE_BINDINGS_DIR}
+        ${CXX_JUCE_BRIDGE_INCLUDE_DIR}
 )
 
 target_sources(cxx-juce
