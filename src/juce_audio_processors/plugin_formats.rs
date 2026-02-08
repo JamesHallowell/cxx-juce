@@ -53,6 +53,7 @@ mod juce {
 
     unsafe extern "C++" {
         include!("cxx_juce.h");
+        include!("cxx_juce_audio_processors/cxx_juce_audio_processors.h");
 
         type JuceString = crate::juce_core::JuceString;
         type PluginDescription = crate::juce_audio_processors::PluginDescription;

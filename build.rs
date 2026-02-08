@@ -5,7 +5,7 @@ fn main() {
         return;
     }
 
-    let bridges = [
+    let mut bridges = vec![
         "src/juce_audio_basics/buffer.rs",
         "src/juce_audio_basics/filters.rs",
         "src/juce_audio_basics/midi.rs",
@@ -17,9 +17,6 @@ fn main() {
         "src/juce_audio_devices/midi_input.rs",
         "src/juce_audio_devices/midi_output.rs",
         "src/juce_audio_devices/mod.rs",
-        "src/juce_audio_processors/plugin_description.rs",
-        "src/juce_audio_processors/plugin_formats.rs",
-        "src/juce_audio_processors/plugin_instance.rs",
         "src/juce_core/array.rs",
         "src/juce_core/bigint.rs",
         "src/juce_core/file.rs",
@@ -31,6 +28,15 @@ fn main() {
         "src/juce_events/message_manager.rs",
         "src/juce_events/mod.rs",
     ];
+
+    if cfg!(feature = "juce_audio_processors") {
+        bridges.append(&mut vec![
+            "src/juce_audio_processors/plugin_description.rs",
+            "src/juce_audio_processors/plugin_formats.rs",
+            "src/juce_audio_processors/plugin_instance.rs",
+        ]);
+    }
+
     for bridge in bridges.iter() {
         let _ = cxx_build::bridge(bridge);
         println!("cargo:rerun-if-changed={bridge}");
@@ -56,6 +62,10 @@ fn main() {
     // Pass system JUCE source if provided (for Nix builds)
     if let Ok(juce_path) = env::var("CXX_JUCE_SYSTEM_JUCE_SOURCE") {
         cmake.define("CXX_JUCE_SYSTEM_JUCE_SOURCE", juce_path);
+    }
+
+    if cfg!(feature = "juce_audio_processors") {
+        cmake.define("CXX_JUCE_AUDIO_PROCESSORS", "ON");
     }
 
     if cfg!(feature = "asio") {

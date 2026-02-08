@@ -2,6 +2,7 @@
 
 pub mod juce_audio_basics;
 pub mod juce_audio_devices;
+#[cfg(feature = "juce_audio_processors")]
 pub mod juce_audio_processors;
 pub mod juce_core;
 pub mod juce_events;

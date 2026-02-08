@@ -33,6 +33,17 @@ required to build JUCE on your platform.
 
 ## Crate Features
 
+### GPL/Commercial Modules
+
+Certain JUCE modules are licensed under either the GPL or a commercial license. If you enable these features, you must
+ensure that you comply with these terms.
+
+#### `juce_audio_processors`
+
+Enables the `juce_audio_processors` module for loading audio plugins.
+
+### Audio Backends
+
 #### `asio`
 
 To build with ASIO support:
@@ -54,6 +65,9 @@ at your option.
 
 The juce_audio_basics, juce_audio_devices, juce_core and juce_events modules are permissively licensed under the terms
 of the [ISC license](https://www.isc.org/licenses/).
+
+The juce_audio_processors module is licensed under the terms of either the [GPL v3 license or the JUCE commercial
+license](https://github.com/juce-framework/JUCE/blob/7.0.12/LICENSE.md).
 
 ## Contribution
 

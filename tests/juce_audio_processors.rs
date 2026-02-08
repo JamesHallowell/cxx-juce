@@ -1,3 +1,5 @@
+#![cfg(feature = "juce_audio_processors")]
+
 use cxx::UniquePtr;
 use cxx_juce::juce_audio_basics::{AudioSampleBuffer, MidiBuffer};
 use cxx_juce::juce_core::{FileSearchPath, StringArray};
