@@ -11,6 +11,8 @@ set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
 
 set(CXX_JUCE_SYSTEM_JUCE_SOURCE "" CACHE PATH "Path to pre-fetched JUCE source directory")
 
+set(CXX_JUCE_AUDIO_PROCESSORS OFF CACHE BOOL "Whether to build the juce_audio_processors module")
+
 set(JUCE_MODULES_ONLY ON)
 
 if(CXX_JUCE_SYSTEM_JUCE_SOURCE)
@@ -40,7 +42,6 @@ target_compile_definitions(cxx-juce
         JUCE_USE_CURL=0
         JUCE_WEB_BROWSER=0
         JUCE_CHECK_MEMORY_LEAKS=0
-        JUCE_PLUGINHOST_AU=1
 )
 
 message(STATUS "Using bridge at ${CXX_JUCE_BRIDGE_INCLUDE_DIR}")
@@ -58,15 +59,12 @@ target_sources(cxx-juce
         cxx_juce_audio_basics/cxx_juce_audio_basics.h
         cxx_juce_audio_devices/cxx_juce_audio_devices.cpp
         cxx_juce_audio_devices/cxx_juce_audio_devices.h
-        cxx_juce_audio_processors/cxx_juce_audio_processors.cpp
-        cxx_juce_audio_processors/cxx_juce_audio_processors.h
         cxx_juce_core/cxx_juce_core.cpp
         cxx_juce_core/cxx_juce_core.h
         cxx_juce_events/cxx_juce_events.cpp
         cxx_juce_events/cxx_juce_events.h
         cxx_juce_utils.h
         ${CXX_JUCE_BRIDGE_FILES}
-
 )
 
 target_link_libraries(cxx-juce
@@ -75,10 +73,29 @@ target_link_libraries(cxx-juce
         juce::juce_audio_devices
         juce::juce_core
         juce::juce_events
-        juce::juce_audio_processors
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags
 )
+
+if(CXX_JUCE_AUDIO_PROCESSORS)
+    message(STATUS "Adding juce_audio_processors...")
+
+    target_compile_definitions(cxx-juce
+        PUBLIC
+            JUCE_PLUGINHOST_AU=1
+    )
+
+    target_sources(cxx-juce
+        PRIVATE
+            cxx_juce_audio_processors/cxx_juce_audio_processors.cpp
+            cxx_juce_audio_processors/cxx_juce_audio_processors.h
+    )
+
+    target_link_libraries(cxx-juce
+        PUBLIC
+            juce::juce_audio_processors
+    )
+endif()
 
 if (CXX_JUCE_USE_ASIO)
     message(STATUS "Using ASIO SDK at ${CXX_JUCE_ASIO_SDK_DIR}")

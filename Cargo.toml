@@ -8,7 +8,9 @@ repository = "https://github.com/JamesHallowell/cxx-juce"
 documentation = "https://docs.rs/cxx-juce"
 
 [features]
+default = []
 asio = []
+juce_audio_processors = []
 
 [dependencies]
 cxx = "1.0.188"
@@ -16,3 +18,7 @@ cxx = "1.0.188"
 [build-dependencies]
 cmake = "0.1.57"
 cxx-build = "1.0.188"
+
+[[example]]
+name = "audio_plugins"
+required-features = ["juce_audio_processors"]
