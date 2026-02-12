@@ -184,6 +184,7 @@ macro_rules! define_juce_type {
         }
     };
     (@field $name:ident, $field:ident, $field_ty:ty, get, $get:ident) => {
+        #[doc = concat!("Returns the value of `", stringify!($field), "`.")]
         pub fn $get(&self) -> $field_ty {
             self.$field
         }

@@ -8,6 +8,7 @@ use cxx::UniquePtr;
 use std::pin::Pin;
 
 define_juce_type! {
+    /// Manages a list of plugin formats.
     AudioPluginFormatManager,
     layout = juce::AudioPluginFormatManagerLayout,
     cxx_name = "juce::AudioPluginFormatManager",
@@ -15,26 +16,31 @@ define_juce_type! {
 }
 
 impl AudioPluginFormatManager {
+    /// Creates a new [`AudioPluginFormatManager`].
     pub fn new(_: &JUCE) -> Self {
         juce::audio_plugin_format_manager_new()
     }
 
+    /// Returns a reference to the format at the given index.
     pub fn get_format_ref(&self, index: i32) -> Option<&juce::AudioPluginFormat> {
         let ptr = self.get_format_raw(index);
         unsafe { ptr.as_ref() }
     }
 
+    /// Returns a mutable reference to the format at the given index.
     pub fn get_format_mut(&mut self, index: i32) -> Option<Pin<&mut juce::AudioPluginFormat>> {
         let ptr = self.get_format_raw(index);
         unsafe { ptr.as_mut().map(|ptr| Pin::new_unchecked(ptr)) }
     }
 
+    /// Registers a plugin format.
     pub fn add_format(&mut self, format: impl AudioPluginFormat + 'static) {
         let boxed = Box::new(format);
         let wrapped = juce::wrap_audio_plugin_format(boxed);
         unsafe { self.add_format_raw(wrapped.into_raw()) }
     }
 
+    /// Calls the given function for each registered format.
     pub fn for_each_format_mut(&mut self, mut func: impl FnMut(Pin<&mut juce::AudioPluginFormat>)) {
         for i in 0..self.get_num_formats() {
             if let Some(format) = self.get_format_mut(i) {
@@ -82,9 +88,11 @@ mod juce {
         #[cxx_name = "drop"]
         fn audio_plugin_format_manager_drop(self_: &mut AudioPluginFormatManager);
 
+        /// Adds the default plugin formats (e.g. VST3, AudioUnit).
         #[rust_name = "add_default_formats"]
         fn addDefaultFormats(self: &mut AudioPluginFormatManager);
 
+        /// Returns the number of registered formats.
         #[rust_name = "get_num_formats"]
         fn getNumFormats(self: &AudioPluginFormatManager) -> i32;
 
@@ -235,6 +243,7 @@ mod juce {
 }
 
 define_trait! {
+    /// A trait representing a plugin format (e.g. VST3, AudioUnit).
     AudioPluginFormat,
     AudioPluginFormatImpl,
     "cxx_juce::BoxDynAudioPluginFormat",

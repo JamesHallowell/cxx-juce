@@ -5,16 +5,19 @@ use std::pin::Pin;
 pub use juce::{AudioPluginInstance, AudioProcessor};
 
 impl AudioPluginInstance {
+    /// Upcasts to the base [`AudioProcessor`].
     pub fn cast(&self) -> &AudioProcessor {
         juce::audio_plugin_to_processor(self)
     }
 
+    /// Upcasts to the base [`AudioProcessor`] mutably.
     pub fn cast_mut(self: Pin<&mut Self>) -> Pin<&mut AudioProcessor> {
         juce::audio_plugin_to_processor_mut(self)
     }
 }
 
 impl AudioProcessor {
+    /// Returns the name of the processor.
     pub fn get_name(&self) -> JuceString {
         juce::audio_processor_get_name(self)
     }
@@ -26,7 +29,9 @@ mod juce {
         include!("cxx_juce.h");
         include!("cxx_juce_audio_processors/cxx_juce_audio_processors.h");
 
+        /// An instance of an audio plugin.
         type AudioPluginInstance;
+        /// Base class for audio processors.
         type AudioProcessor;
         type JuceString = crate::juce_core::JuceString;
         type AudioSampleBuffer = crate::juce_audio_basics::AudioSampleBuffer;
@@ -54,6 +59,7 @@ mod juce {
         #[cxx_name = "audioProcessorGetName"]
         fn audio_processor_get_name(self_: &AudioProcessor) -> JuceString;
 
+        /// Prepares the processor for playback.
         #[cxx_name = "prepareToPlay"]
         fn prepare_to_play(
             self: Pin<&mut AudioProcessor>,
@@ -61,9 +67,11 @@ mod juce {
             samples_per_block: i32,
         );
 
+        /// Releases resources when playback stops.
         #[cxx_name = "releaseResources"]
         fn release_resources(self: Pin<&mut AudioProcessor>);
 
+        /// Processes a block of audio and MIDI data.
         #[cxx_name = "processBlock"]
         fn process_block(
             self: Pin<&mut AudioProcessor>,
@@ -71,6 +79,7 @@ mod juce {
             midi: Pin<&mut MidiBuffer>,
         );
 
+        /// Processes a block of audio and MIDI data in bypass mode.
         #[cxx_name = "processBlockBypassed"]
         fn process_block_bypassed(
             self: Pin<&mut AudioProcessor>,
@@ -78,30 +87,39 @@ mod juce {
             midi: Pin<&mut MidiBuffer>,
         );
 
+        /// Returns the total number of input channels.
         #[cxx_name = "getTotalNumInputChannels"]
         fn get_total_num_input_channels(self: &AudioProcessor) -> i32;
 
+        /// Returns the total number of output channels.
         #[cxx_name = "getTotalNumOutputChannels"]
         fn get_total_num_output_channels(self: &AudioProcessor) -> i32;
 
+        /// Returns the latency in samples.
         #[cxx_name = "getLatencySamples"]
         fn get_latency_samples(self: &AudioProcessor) -> i32;
 
+        /// Sets the latency in samples.
         #[cxx_name = "setLatencySamples"]
         fn set_latency_samples(self: Pin<&mut AudioProcessor>, new_latency: i32);
 
+        /// Returns the current sample rate.
         #[cxx_name = "getSampleRate"]
         fn get_sample_rate(self: &AudioProcessor) -> f64;
 
+        /// Returns the current block size.
         #[cxx_name = "getBlockSize"]
         fn get_block_size(self: &AudioProcessor) -> i32;
 
+        /// Returns `true` if the processor is suspended.
         #[cxx_name = "isSuspended"]
         fn is_suspended(self: &AudioProcessor) -> bool;
 
+        /// Sets whether the processor is in non-realtime mode.
         #[cxx_name = "setNonRealtime"]
         fn set_non_realtime(self: Pin<&mut AudioProcessor>, is_non_realtime: bool);
 
+        /// Fills in a plugin description with information about this instance.
         #[cxx_name = "fillInPluginDescription"]
         fn fill_in_plugin_description(
             self: &AudioPluginInstance,

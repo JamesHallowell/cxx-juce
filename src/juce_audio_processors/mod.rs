@@ -1,3 +1,5 @@
+//! Audio plugin hosting and format support.
+
 mod plugin_description;
 mod plugin_formats;
 mod plugin_instance;
