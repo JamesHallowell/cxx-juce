@@ -1,6 +1,7 @@
 use crate::define_juce_type;
 
 define_juce_type! {
+    /// An arbitrarily large integer.
     BigInteger,
     layout = juce::BigIntegerLayout,
     cxx_name = "juce::BigInteger",
@@ -35,11 +36,14 @@ mod juce {
         #[cxx_name = "drop"]
         fn big_integer_drop(self_: &mut BigInteger);
 
+        /// Returns the number of set bits.
         #[cxx_name = "countNumberOfSetBits"]
         fn count_number_of_set_bits(self: &BigInteger) -> i32;
 
+        /// Clears all bits to zero.
         fn clear(self: &mut BigInteger) -> &mut BigInteger;
 
+        /// Sets a range of bits.
         #[cxx_name = "setRange"]
         fn set_range(
             self: &mut BigInteger,
@@ -48,6 +52,7 @@ mod juce {
             should_be_set: bool,
         ) -> &mut BigInteger;
 
+        /// Converts the integer to a string in the given base.
         #[cxx_name = "toString"]
         fn to_string(self: &BigInteger, base: i32, min_chars: i32) -> JuceString;
     }

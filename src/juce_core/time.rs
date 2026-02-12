@@ -3,6 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 define_juce_type! {
     #[derive(Copy, Clone)]
+    /// A point in time.
     Time,
     layout = juce::TimeLayout,
     cxx_name = "juce::Time",
@@ -11,6 +12,7 @@ define_juce_type! {
 }
 
 impl Time {
+    /// Returns the time as milliseconds since the Unix epoch.
     pub fn to_milliseconds(&self) -> i64 {
         juce::to_milliseconds(self)
     }

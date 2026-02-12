@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 //! Rust bindings for [JUCE](https://juce.com/) using [cxx](https://github.com/dtolnay/cxx).
 
 pub mod juce_audio_basics;
@@ -10,6 +12,7 @@ mod utils;
 
 pub use {cxx::UniquePtr, juce_events::JUCE};
 
+/// An error raised by JUCE.
 #[derive(Debug)]
 pub struct JuceError(juce_core::JuceString);
 

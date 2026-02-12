@@ -1,3 +1,5 @@
+//! Manages the JUCE event loop and message manager.
+
 mod application;
 mod message_manager;
 

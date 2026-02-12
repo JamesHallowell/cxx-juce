@@ -2,6 +2,7 @@ use crate::{define_array_type, define_juce_type, juce_core::JuceString};
 use std::iter::FromIterator;
 
 define_juce_type! {
+    /// An array of 32-bit integers.
     IntArray,
     layout = ArrayLayout,
     cxx_name = "juce::IntArray",
@@ -38,6 +39,7 @@ define_array_type! {
 }
 
 define_juce_type! {
+    /// An array of 64-bit floating point numbers.
     DoubleArray,
     layout = ArrayLayout,
     cxx_name = "juce::DoubleArray",
@@ -56,6 +58,7 @@ define_array_type! {
 }
 
 define_juce_type! {
+    /// An array of strings.
     StringArray,
     layout = juce::StringArrayLayout,
     cxx_name = "juce::StringArray",
@@ -106,12 +109,15 @@ mod juce {
         #[cxx_name = "drop"]
         fn int_array_drop(value: &mut IntArray);
 
+        /// Returns a pointer to the raw data.
         #[cxx_name = "getRawDataPointer"]
         fn data(self: &IntArray) -> *const i32;
 
+        /// Returns the number of elements.
         #[cxx_name = "size"]
         fn len(self: &IntArray) -> i32;
 
+        /// Appends a value to the array.
         fn add(self: &mut IntArray, value: &i32);
 
         type FloatArray = super::FloatArray;
@@ -150,12 +156,15 @@ mod juce {
         #[cxx_name = "drop"]
         fn double_array_drop(value: &mut DoubleArray);
 
+        /// Returns a pointer to the raw data.
         #[cxx_name = "getRawDataPointer"]
         fn data(self: &DoubleArray) -> *const f64;
 
+        /// Returns the number of elements.
         #[cxx_name = "size"]
         fn len(self: &DoubleArray) -> i32;
 
+        /// Appends a value to the array.
         fn add(self: &mut DoubleArray, value: &f64);
 
         type StringArray = super::StringArray;
@@ -176,16 +185,20 @@ mod juce {
         #[cxx_name = "eq"]
         fn string_array_equality(value: &StringArray, other: &StringArray) -> bool;
 
+        /// Returns a pointer to the first element.
         #[namespace = "cxx_juce"]
         #[cxx_name = "begin"]
         fn data(self: &StringArray) -> *const JuceString;
 
+        /// Appends a string to the array.
         #[cxx_name = "add"]
         fn add(self: &mut StringArray, value: JuceString);
 
+        /// Returns a reference to the string at the given index.
         #[cxx_name = "getReference"]
         fn get_reference(self: &StringArray, index: i32) -> &JuceString;
 
+        /// Returns the number of strings.
         #[cxx_name = "size"]
         fn len(self: &StringArray) -> i32;
     }

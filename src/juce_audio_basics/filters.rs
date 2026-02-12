@@ -1,6 +1,7 @@
 use crate::define_juce_type;
 
 define_juce_type! {
+    /// A set of IIR filter coefficients.
     IIRCoefficients,
     layout = juce::IIRCoefficientsLayout,
     cxx_name = "juce::IIRCoefficients",
@@ -9,6 +10,7 @@ define_juce_type! {
 }
 
 define_juce_type! {
+    /// An IIR filter for single-threaded use.
     SingleThreadedIIRFilter,
     layout = juce::SingleThreadedIIRFilterLayout,
     cxx_name = "juce::SingleThreadedIIRFilter",
@@ -74,6 +76,7 @@ mod juce {
         /// Applies a set of coefficients to this filter.
         fn set_coefficients(self: &mut SingleThreadedIIRFilter, coefficients: &IIRCoefficients);
 
+        /// Processes an array of samples through the filter.
         #[cxx_name = "processSamples"]
         unsafe fn process_samples(
             self: &mut SingleThreadedIIRFilter,

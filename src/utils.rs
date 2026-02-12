@@ -86,6 +86,7 @@ macro_rules! define_juce_type {
         $(#[$type_attr:meta])* $name:ident,
         fields = {
             $(
+                $(#[$field_attr:meta])*
                 $vis:vis $field:ident: $ty:ty = {
                     offset = $field_offset:expr,
                     $(
@@ -103,6 +104,7 @@ macro_rules! define_juce_type {
         $(#[$type_attr])*
         pub struct $name {
             $(
+                $(#[$field_attr])*
                 $vis $field: $ty,
             )*
             _marker: $crate::utils::PhantomUnsend,
@@ -175,6 +177,7 @@ macro_rules! define_juce_type {
         }
     };
     (@field $name:ident, $field:ident, $field_ty:ty, with, $with:ident) => {
+        #[doc = concat!("Returns `self` with `", stringify!($field), "` set to the given value.")]
         pub fn $with(mut self, value: impl Into<$field_ty>) -> Self {
             self.$field = value.into();
             self
@@ -210,10 +213,12 @@ macro_rules! define_array_type {
         ),* $(,)?
     ) => {
         impl $name {
+            /// Returns `true` if the array is empty.
             pub fn is_empty(&self) -> bool {
                 self.len() == 0
             }
 
+            /// Returns a reference to the element at the given index, or [`None`] if out of bounds.
             pub fn get(&self, index: i32) -> Option<&$ty> {
                 if index < 0 || index >= self.len() {
                     return None;
@@ -224,6 +229,7 @@ macro_rules! define_array_type {
                 unsafe { data.offset(index).as_ref() }
             }
 
+            /// Returns the contents as a slice.
             pub fn as_slice(&self) -> &[$ty] {
                 let data = $data(self);
                 self.len()

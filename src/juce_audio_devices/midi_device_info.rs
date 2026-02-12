@@ -8,9 +8,11 @@ define_juce_type! {
     /// Information about a MIDI device
     MidiDeviceInfo,
     fields = {
+        /// The name of the device.
         pub name: JuceString = {
             offset = juce::MidiDeviceInfoLayout::NameOffset,
         },
+        /// The unique identifier of the device.
         pub identifier: JuceString = {
             offset = juce::MidiDeviceInfoLayout::IdentifierOffset,
         },
@@ -27,6 +29,7 @@ impl std::fmt::Display for MidiDeviceInfo {
 }
 
 define_juce_type! {
+    /// An array of [`MidiDeviceInfo`].
     MidiDeviceInfoArray,
     layout = ArrayLayout,
     cxx_name = "juce::MidiDeviceInfoArray",
@@ -65,9 +68,11 @@ mod juce {
         #[cxx_name = "drop"]
         fn midi_device_info_array_drop(self_: &mut MidiDeviceInfoArray);
 
+        /// Returns a pointer to the raw data.
         #[cxx_name = "getRawDataPointer"]
         fn data(self: &MidiDeviceInfoArray) -> *const MidiDeviceInfo;
 
+        /// Returns the number of elements.
         #[cxx_name = "size"]
         fn len(self: &MidiDeviceInfoArray) -> i32;
     }

@@ -12,14 +12,21 @@ use std::{
     time::Duration,
 };
 
+/// A trait for JUCE applications.
 pub trait App {
+    /// Returns the name of this application.
     fn name(&self) -> JuceString;
+    /// Returns the version number of this application.
     fn version(&self) -> JuceString;
+    /// Called when the application starts.
     fn initialise(&mut self, handle: AppHandle<Self>);
+    /// Called when the application is being shut down.
     fn shutdown(&mut self);
+    /// Callback for timer events.
     fn timer_callback(&mut self, callback: AppHandle<Self>, timer: AppTimerId);
 }
 
+/// A handle to the application.
 pub struct AppHandle<T>
 where
     T: ?Sized,
@@ -37,10 +44,13 @@ impl<T> Clone for AppHandle<T> {
     }
 }
 
+/// A trait for handling messages sent to the application.
 pub trait On<Message>: App {
+    /// Called when a message is sent to the application.
     fn on(&mut self, message: Message);
 }
 
+/// An identifier for a timer started by the application.
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct AppTimerId(i32);
 
@@ -125,6 +135,7 @@ impl<A> AppHandle<A>
 where
     A: App + 'static,
 {
+    /// Send a message to the application. The message will be handled on the message thread.
     pub fn send<M>(&self, message: M)
     where
         M: Send + 'static,
@@ -137,6 +148,7 @@ where
         });
     }
 
+    /// Start a timer that will call the application's `timer_callback` method at the specified interval.
     pub fn start_timer(&self, interval: Duration) -> AppTimerId {
         let timer_id = self.state.timer_id.fetch_add(1, Ordering::Relaxed);
         let interval = interval.as_millis().try_into().unwrap_or(i32::MAX);
@@ -148,12 +160,14 @@ where
         AppTimerId(timer_id)
     }
 
+    /// Stop a timer that was previously started with `start_timer`.
     pub fn stop_timer(&self, AppTimerId(timer_id): AppTimerId) {
         MessageManager::call_async(move || {
             juce::stop_app_timer(timer_id);
         });
     }
 
+    /// Call a function on the main thread.
     pub fn call_on_main_thread(&self, func: impl FnOnce(&mut A, AppHandle<A>) + Send + 'static) {
         MessageManager::call_async(|| {
             with_instance(|wrapper| {
@@ -163,10 +177,12 @@ where
         });
     }
 
+    /// Quit the application.
     pub fn quit(self) {
         juce::JUCEApplicationBase::quit()
     }
 
+    /// Returns whether the application is quitting.
     pub fn is_quitting(&self) -> bool {
         MessageManager::has_stop_message_been_sent()
     }

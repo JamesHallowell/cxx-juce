@@ -9,14 +9,17 @@ use std::pin::Pin;
 pub use juce::{AudioIODeviceType, BoxDynAudioDeviceType};
 
 impl AudioIODeviceType {
+    /// Returns a list of input device names.
     pub fn get_input_device_names(&self) -> StringArray {
         self.get_device_names(true)
     }
 
+    /// Returns a list of output device names.
     pub fn get_output_device_names(&self) -> StringArray {
         self.get_device_names(false)
     }
 
+    /// Creates a device with the given input and output device names.
     pub fn create_device(
         self: Pin<&mut Self>,
         input_device_name: impl Into<JuceString>,
@@ -40,6 +43,7 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
+        /// A type of audio device driver.
         type AudioIODeviceType;
         type AudioIODevice = crate::juce_audio_devices::AudioIODevice;
         type StringArray = crate::juce_core::StringArray;
@@ -47,6 +51,7 @@ mod juce {
         #[namespace = "cxx_juce"]
         type BoxDynAudioDevice = crate::juce_audio_devices::BoxDynAudioDevice;
         #[namespace = "cxx_juce"]
+        /// A boxed [`AudioDeviceType`] trait object.
         type BoxDynAudioDeviceType = Box<dyn super::AudioDeviceType>;
 
         #[namespace = "cxx_juce"]
@@ -55,15 +60,19 @@ mod juce {
             device_type: BoxDynAudioDeviceType,
         ) -> UniquePtr<AudioIODeviceType>;
 
+        /// Returns the type name.
         #[cxx_name = "getTypeName"]
         fn get_type_name(self: &AudioIODeviceType) -> &JuceString;
 
+        /// Scans for available devices.
         #[rust_name = "scan_for_devices"]
         fn scanForDevices(self: Pin<&mut AudioIODeviceType>);
 
+        /// Returns a list of device names.
         #[cxx_name = "getDeviceNames"]
         fn get_device_names(self: &AudioIODeviceType, inputs: bool) -> StringArray;
 
+        /// Creates a device (raw pointer version).
         #[cxx_name = "createDevice"]
         fn create_device_raw(
             self: Pin<&mut AudioIODeviceType>,

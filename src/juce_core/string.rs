@@ -1,6 +1,7 @@
 use crate::define_juce_type;
 
 define_juce_type! {
+    /// A JUCE string.
     JuceString,
     layout = juce::StringLayout,
     cxx_name = "juce::JuceString",
@@ -12,6 +13,7 @@ define_juce_type! {
 }
 
 impl JuceString {
+    /// Creates a new [`JuceString`] from the given string.
     pub fn new(str: impl AsRef<str>) -> Self {
         let str = str.as_ref();
         let data = str.as_ptr().cast();
@@ -96,10 +98,12 @@ mod juce {
         #[cxx_name = "construct"]
         fn string_clone(self_: &JuceString) -> JuceString;
 
+        /// Creates a string from UTF-8 data.
         #[cxx_name = "fromUTF8"]
         #[Self = "JuceString"]
         unsafe fn from_utf8(data: *const c_char, len: i32) -> JuceString;
 
+        /// Returns `true` if the string is empty.
         #[cxx_name = "isEmpty"]
         fn is_empty(self: &JuceString) -> bool;
 
@@ -107,9 +111,11 @@ mod juce {
         #[cxx_name = "eq"]
         fn string_eq(a: &JuceString, b: &JuceString) -> bool;
 
+        /// Returns the string as a UTF-8 character pointer.
         #[cxx_name = "toUTF8"]
         fn to_utf8(self: &JuceString) -> CharPointerUTF8;
 
+        /// Returns the number of bytes needed to represent the string as UTF-8.
         #[cxx_name = "getNumBytesAsUTF8"]
         fn get_num_bytes_as_utf8(self: &JuceString) -> usize;
 

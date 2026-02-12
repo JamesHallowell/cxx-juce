@@ -12,8 +12,10 @@ mod juce {
         include!("cxx_juce.h");
 
         #[namespace = "juce"]
+        /// An audio device callback.
         type AudioIODeviceCallback;
 
+        /// A boxed [`AudioDeviceCallback`] trait object.
         type BoxDynAudioDeviceCallback = Box<dyn super::AudioDeviceCallback>;
 
         #[cxx_name = "wrap"]

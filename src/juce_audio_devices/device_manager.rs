@@ -182,31 +182,39 @@ define_juce_type! {
     /// The properties of an audio device.
     AudioDeviceSetup,
     fields = {
+        /// The name of the output device.
         pub output_device_name: JuceString = {
             offset = juce::AudioDeviceSetupLayout::OutputDeviceNameOffset,
             with = with_output_device_name,
         },
+        /// The name of the input device.
         pub input_device_name: JuceString = {
             offset = juce::AudioDeviceSetupLayout::InputDeviceNameOffset,
             with = with_input_device_name,
         },
+        /// The sample rate.
         pub sample_rate: c_double = {
             offset = juce::AudioDeviceSetupLayout::SampleRateOffset,
             with = with_sample_rate,
         },
+        /// The buffer size in samples.
         pub buffer_size: c_int = {
             offset = juce::AudioDeviceSetupLayout::BufferSizeOffset,
             with = with_buffer_size,
         },
+        /// A bitmask of active input channels.
         pub input_channels: BigInteger = {
             offset = juce::AudioDeviceSetupLayout::InputChannelsOffset,
         },
+        /// Whether to use the default input channels.
         pub use_default_input_channels: bool = {
             offset = juce::AudioDeviceSetupLayout::UseDefaultInputChannelsOffset,
         },
+        /// A bitmask of active output channels.
         pub output_channels: BigInteger = {
             offset = juce::AudioDeviceSetupLayout::OutputChannelsOffset,
         },
+        /// Whether to use the default output channels.
         pub use_default_output_channels: bool = {
             offset = juce::AudioDeviceSetupLayout::UseDefaultOutputChannelsOffset,
         },
@@ -229,6 +237,7 @@ pub enum ChannelCount {
 unsafe impl Send for ChannelCount {}
 
 impl AudioDeviceSetup {
+    /// Returns the input channel count configuration.
     pub fn input_channels(&self) -> ChannelCount {
         if self.use_default_input_channels {
             ChannelCount::Default
@@ -237,6 +246,7 @@ impl AudioDeviceSetup {
         }
     }
 
+    /// Returns `self` with the input channels set.
     pub fn with_input_channels(mut self, channels: ChannelCount) -> Self {
         match channels {
             ChannelCount::Default => {
@@ -251,6 +261,7 @@ impl AudioDeviceSetup {
         self
     }
 
+    /// Returns the output channel count configuration.
     pub fn output_channels(&self) -> ChannelCount {
         if self.use_default_output_channels {
             ChannelCount::Default
@@ -259,6 +270,7 @@ impl AudioDeviceSetup {
         }
     }
 
+    /// Returns `self` with the output channels set.
     pub fn with_output_channels(mut self, channels: ChannelCount) -> Self {
         match channels {
             ChannelCount::Default => {

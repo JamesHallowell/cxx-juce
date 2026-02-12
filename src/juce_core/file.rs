@@ -1,6 +1,7 @@
 use crate::{define_juce_type, juce_core::JuceString};
 
 define_juce_type! {
+    /// A file or directory path.
     File,
     layout = juce::FileLayout,
     cxx_name = "juce::File",
@@ -12,12 +13,14 @@ define_juce_type! {
 }
 
 impl File {
+    /// Creates a [`File`] from an absolute path.
     pub fn from_absolute_path(path: impl Into<JuceString>) -> Self {
         juce::from_absolute_path(&path.into())
     }
 }
 
 define_juce_type! {
+    /// A list of directory paths for searching.
     FileSearchPath,
     layout = juce::FileSearchPathLayout,
     cxx_name = "juce::FileSearchPath",
@@ -26,6 +29,7 @@ define_juce_type! {
 }
 
 impl FileSearchPath {
+    /// Returns the path at the given index, or [`None`] if out of bounds.
     pub fn get(&self, index: i32) -> Option<File> {
         if index < 0 || index >= self.len() {
             return None;
@@ -105,6 +109,7 @@ mod juce {
         #[cxx_name = "construct"]
         fn from_absolute_path(path: &JuceString) -> File;
 
+        /// Returns the full path name of the file.
         #[cxx_name = "getFullPathName"]
         fn get_full_path_name(self: &File) -> &JuceString;
 
@@ -116,6 +121,7 @@ mod juce {
         #[cxx_name = "drop"]
         fn file_search_path_drop(self_: &mut FileSearchPath);
 
+        /// Returns the number of paths.
         #[cxx_name = "getNumPaths"]
         fn len(self: &FileSearchPath) -> i32;
 
@@ -123,9 +129,11 @@ mod juce {
         #[cxx_name = "index"]
         fn file_search_path_get(self_: &FileSearchPath, index: i32) -> File;
 
+        /// Adds a path if it is not already present.
         #[cxx_name = "addIfNotAlreadyThere"]
         fn add(self: &mut FileSearchPath, file: &File) -> bool;
 
+        /// Returns the search path as a string.
         #[cxx_name = "toString"]
         fn to_string(self: &FileSearchPath) -> JuceString;
     }

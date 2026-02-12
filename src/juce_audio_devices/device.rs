@@ -11,6 +11,7 @@ mod juce {
     unsafe extern "C++" {
         include!("cxx_juce.h");
 
+        /// An audio I/O device.
         pub type AudioIODevice;
         type BigInteger = crate::juce_core::BigInteger;
         type IntArray = crate::juce_core::IntArray;
@@ -19,36 +20,46 @@ mod juce {
         type StringArray = crate::juce_core::StringArray;
 
         #[namespace = "cxx_juce"]
+        /// A boxed [`AudioDevice`] trait object.
         type BoxDynAudioDevice = Box<dyn super::AudioDevice>;
 
         #[namespace = "cxx_juce"]
         #[cxx_name = "wrap"]
         fn wrap_audio_device(device: BoxDynAudioDevice) -> UniquePtr<AudioIODevice>;
 
+        /// Returns the name of the device.
         #[cxx_name = "getName"]
         pub fn get_name(self: &AudioIODevice) -> &JuceString;
 
+        /// Returns the type name of the device.
         #[cxx_name = "getTypeName"]
         pub fn get_type_name(self: &AudioIODevice) -> &JuceString;
 
+        /// Returns the current sample rate.
         #[cxx_name = "getCurrentSampleRate"]
         pub fn get_current_sample_rate(self: Pin<&mut AudioIODevice>) -> f64;
 
+        /// Returns the current buffer size in samples.
         #[cxx_name = "getCurrentBufferSizeSamples"]
         pub fn get_current_buffer_size_samples(self: Pin<&mut AudioIODevice>) -> i32;
 
+        /// Returns the available sample rates.
         #[cxx_name = "getAvailableSampleRates"]
         pub fn get_available_sample_rates(self: Pin<&mut AudioIODevice>) -> DoubleArray;
 
+        /// Returns the available buffer sizes.
         #[cxx_name = "getAvailableBufferSizes"]
         pub fn get_available_buffer_sizes(self: Pin<&mut AudioIODevice>) -> IntArray;
 
+        /// Returns a bitmask of the active input channels.
         #[cxx_name = "getActiveInputChannels"]
         pub fn get_active_input_channels(self: &AudioIODevice) -> BigInteger;
 
+        /// Returns a bitmask of the active output channels.
         #[cxx_name = "getActiveOutputChannels"]
         pub fn get_active_output_channels(self: &AudioIODevice) -> BigInteger;
 
+        /// Opens the device with the given settings, returning an error string on failure.
         #[must_use]
         pub fn open(
             self: Pin<&mut AudioIODevice>,
@@ -58,6 +69,7 @@ mod juce {
             buffer_size: i32,
         ) -> JuceString;
 
+        /// Closes the device.
         pub fn close(self: Pin<&mut AudioIODevice>);
     }
 
