@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.25)
 
 project(cxx-juce VERSION 0.1)
+
+cmake_policy(SET CMP0141 NEW)
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
 
 set(CXX_JUCE_BRIDGE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../target/cxxbridge" CACHE PATH "Path to the bindings include directory")
 set(CXX_JUCE_BRIDGE_FILES "" CACHE STRING "A list of bridge files to build")
@@ -10,7 +13,7 @@ set(CXX_JUCE_AUDIO_PROCESSORS OFF CACHE BOOL "Whether to build the juce_audio_pr
 
 set(CXX_JUCE_ASIO OFF CACHE BOOL "Use ASIO")
 set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
-set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
+set(CXX_JUCE_VERSION_OF_JUCE "7" CACHE STRING "The version of JUCE to use")
 
 set(CXX_JUCE_SYSTEM_JUCE_SOURCE "" CACHE PATH "Path to pre-fetched JUCE source directory")
 
@@ -20,14 +23,24 @@ if(CXX_JUCE_SYSTEM_JUCE_SOURCE)
     message(STATUS "Using system-provided JUCE source at ${CXX_JUCE_SYSTEM_JUCE_SOURCE}")
     add_subdirectory(${CXX_JUCE_SYSTEM_JUCE_SOURCE} ${CMAKE_BINARY_DIR}/juce-build)
 else()
+    if(${CXX_JUCE_VERSION_OF_JUCE} STREQUAL "7")
+        set(JUCE_VERSION "7.0.12")
+        set(JUCE_URL_HASH "SHA256=94e3b35e1990cd67f59736bb5e1eff1cfd9590b16fea82696f309a8f59452434")
+    elseif(${CXX_JUCE_VERSION_OF_JUCE} STREQUAL "8")
+        set(JUCE_VERSION "8.0.12")
+        set(JUCE_URL_HASH "SHA256=dec1a8baee5aaec4502b717a421b850e257ab7e9c2efd03766185ec1957cf102")
+    else()
+        message(FATAL_ERROR "Unexpected JUCE version: ${CXX_JUCE_VERSION_OF_JUCE}")
+    endif()
+
     include(FetchContent)
-    set(JUCE_URL https://github.com/juce-framework/JUCE/archive/refs/tags/${CXX_JUCE_VERSION_OF_JUCE}.tar.gz)
+    set(JUCE_URL https://github.com/juce-framework/JUCE/archive/refs/tags/${JUCE_VERSION}.tar.gz)
     FetchContent_Declare(
         JUCE
         URL ${JUCE_URL}
-        URL_HASH SHA256=94e3b35e1990cd67f59736bb5e1eff1cfd9590b16fea82696f309a8f59452434
+        URL_HASH ${JUCE_URL_HASH}
     )
-    message(STATUS "Fetching JUCE ${CXX_JUCE_VERSION_OF_JUCE}...")
+    message(STATUS "Fetching JUCE v${JUCE_VERSION}...")
     FetchContent_MakeAvailable(JUCE)
 endif()
 

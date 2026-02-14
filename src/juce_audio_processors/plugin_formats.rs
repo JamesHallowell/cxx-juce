@@ -48,6 +48,11 @@ impl AudioPluginFormatManager {
             }
         }
     }
+
+    /// Adds the default plugin formats (e.g. VST3, AudioUnit).
+    pub fn add_default_formats(&mut self) {
+        juce::add_default_formats_to_manager(self);
+    }
 }
 
 #[cxx::bridge(namespace = "juce")]
@@ -89,12 +94,12 @@ mod juce {
         fn audio_plugin_format_manager_drop(self_: &mut AudioPluginFormatManager);
 
         /// Adds the default plugin formats (e.g. VST3, AudioUnit).
-        #[rust_name = "add_default_formats"]
-        fn addDefaultFormats(self: &mut AudioPluginFormatManager);
+        #[cxx_name = "addDefaultFormatsToManager"]
+        fn add_default_formats_to_manager(self_: &mut AudioPluginFormatManager);
 
         /// Returns the number of registered formats.
-        #[rust_name = "get_num_formats"]
-        fn getNumFormats(self: &AudioPluginFormatManager) -> i32;
+        #[cxx_name = "getNumFormats"]
+        fn get_num_formats(self: &AudioPluginFormatManager) -> i32;
 
         #[cxx_name = "getFormat"]
         #[doc(hidden)]

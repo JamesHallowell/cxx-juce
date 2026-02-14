@@ -33,20 +33,21 @@ required to build JUCE on your platform.
 
 ## Crate Features
 
-### GPL/Commercial Modules
+### `juce-8`
 
-Certain JUCE modules are licensed under either the GPL or a commercial license. If you enable these features, you must
-ensure that you comply with these terms.
+By default, this crate uses JUCE 7. To use JUCE 8 instead, enable the `juce-8` feature. Note that this changes the licensing terms for the JUCE modules, as described in the [License](#license) section below.
 
-#### `juce_audio_processors`
+### `juce_audio_processors`
 
-Enables the `juce_audio_processors` module for loading audio plugins.
+The `juce_audio_processors` module is not enabled by default, as it has additional dependencies and different licensing terms.
 
-### Audio Backends
+### `vst3`
 
-#### `asio`
+Enables support for hosting VST3 plugins.
 
-To build with ASIO support:
+### `asio`
+
+Enables the ASIO backend on Windows. To build with ASIO support:
 
 1. Agree to Steinberg's licensing terms and download the ASIO SDK.
 2. Enable the `asio` feature for this crate.
@@ -63,11 +64,16 @@ Licensed under either of
 
 at your option.
 
-The juce_audio_basics, juce_audio_devices, juce_core and juce_events modules are permissively licensed under the terms
-of the [ISC license](https://www.isc.org/licenses/).
+The licenses for the JUCE modules depend on the version of JUCE being used.
 
-The juce_audio_processors module is licensed under the terms of either the [GPL v3 license or the JUCE commercial
-license](https://github.com/juce-framework/JUCE/blob/7.0.12/LICENSE.md).
+### JUCE 7 (default)
+
+The `juce_core`, `juce_events`, `juce_audio_basics`, and `juce_audio_devices` modules are permissively licensed under the terms
+of the [ISC license](https://www.isc.org/licenses/). The `juce_audio_processors` module is licensed under the terms of either the [GPL v3 license or the JUCE commercial license](https://github.com/juce-framework/JUCE/blob/7.0.12/LICENSE.md).
+
+### JUCE 8 (enabled via the `juce-8` feature)
+
+The `juce_core`, `juce_events`, `juce_audio_basics`, `juce_audio_devices`, and `juce_audio_processors` modules are licensed under the terms of either the [AGPL v3 license or the JUCE commercial license](https://github.com/juce-framework/JUCE/blob/8.0.12/LICENSE.md).
 
 ## Contribution
 
