@@ -42,6 +42,7 @@ fn main() {
         println!("cargo:rerun-if-changed={bridge}");
     }
 
+    let mut defines = vec![];
     let mut cmake = cmake::Config::new("bridge");
     cmake.build_target("cxx-juce");
 
@@ -66,6 +67,11 @@ fn main() {
 
     if cfg!(feature = "juce_audio_processors") {
         cmake.define("CXX_JUCE_AUDIO_PROCESSORS", "ON");
+
+        defines.push("JUCE_PLUGINHOST_AU=1");
+        if cfg!(feature = "vst3") {
+            defines.push("JUCE_PLUGINHOST_VST3=1");
+        }
     }
 
     if cfg!(feature = "asio") {
@@ -92,6 +98,7 @@ fn main() {
         cmake.define("CMAKE_OSX_DEPLOYMENT_TARGET", "12.0");
     }
 
+    cmake.define("CXX_JUCE_COMPILER_DEFINITIONS", defines.join(";"));
     let destination = cmake.build();
 
     println!("cargo:rerun-if-changed=bridge");

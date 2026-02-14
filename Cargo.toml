@@ -11,6 +11,7 @@ documentation = "https://docs.rs/cxx-juce"
 default = []
 asio = []
 juce_audio_processors = []
+vst3 = ["juce_audio_processors"]
 
 [dependencies]
 cxx = "1.0.188"

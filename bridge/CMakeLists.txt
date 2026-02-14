@@ -4,14 +4,15 @@ project(cxx-juce VERSION 0.1)
 
 set(CXX_JUCE_BRIDGE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../target/cxxbridge" CACHE PATH "Path to the bindings include directory")
 set(CXX_JUCE_BRIDGE_FILES "" CACHE STRING "A list of bridge files to build")
+set(CXX_JUCE_COMPILER_DEFINITIONS "" CACHE STRING "A list of compiler definitions to pass to the C++ compiler")
 
-set(CXX_JUCE_USE_ASIO OFF CACHE BOOL "Use ASIO")
+set(CXX_JUCE_AUDIO_PROCESSORS OFF CACHE BOOL "Whether to build the juce_audio_processors module")
+
+set(CXX_JUCE_ASIO OFF CACHE BOOL "Use ASIO")
 set(CXX_JUCE_ASIO_SDK_DIR "" CACHE PATH "Path to the ASIO SDK directory")
 set(CXX_JUCE_VERSION_OF_JUCE 7.0.12)
 
 set(CXX_JUCE_SYSTEM_JUCE_SOURCE "" CACHE PATH "Path to pre-fetched JUCE source directory")
-
-set(CXX_JUCE_AUDIO_PROCESSORS OFF CACHE BOOL "Whether to build the juce_audio_processors module")
 
 set(JUCE_MODULES_ONLY ON)
 
@@ -42,6 +43,7 @@ target_compile_definitions(cxx-juce
         JUCE_USE_CURL=0
         JUCE_WEB_BROWSER=0
         JUCE_CHECK_MEMORY_LEAKS=0
+        ${CXX_JUCE_COMPILER_DEFINITIONS}
 )
 
 message(STATUS "Using bridge at ${CXX_JUCE_BRIDGE_INCLUDE_DIR}")
@@ -79,11 +81,6 @@ target_link_libraries(cxx-juce
 
 if(CXX_JUCE_AUDIO_PROCESSORS)
     message(STATUS "Adding juce_audio_processors...")
-
-    target_compile_definitions(cxx-juce
-        PUBLIC
-            JUCE_PLUGINHOST_AU=1
-    )
 
     target_sources(cxx-juce
         PRIVATE
