@@ -19,6 +19,13 @@ CXX_JUCE_ASSERT_FIELD_OFFSET (PluginDescription, lastFileModTime, LastFileModTim
 CXX_JUCE_ASSERT_FIELD_OFFSET (PluginDescription, uniqueId, UniqueIdOffset)
 CXX_JUCE_ASSERT_FIELD_OFFSET (PluginDescription, isInstrument, IsInstrumentOffset)
 
+#if JUCE_MAJOR_VERSION < 8 || (JUCE_MAJOR_VERSION == 8 && JUCE_MINOR_VERSION == 0 && JUCE_BUILDNUMBER < 9)
+void juce::addDefaultFormatsToManager (AudioPluginFormatManager& manager)
+{
+    manager.addDefaultFormats();
+}
+#endif
+
 namespace cxx_juce
 {
 juce::String audioProcessorGetName (const juce::AudioProcessor& processor) noexcept

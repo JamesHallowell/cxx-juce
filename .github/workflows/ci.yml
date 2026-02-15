@@ -8,6 +8,10 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CMAKE_GENERATOR: Ninja
+  RUSTC_WRAPPER: sccache
+  CMAKE_CXX_COMPILER_LAUNCHER: sccache
+  SCCACHE_DIR: ${{ github.workspace }}/.sccache
 
 jobs:
   build:
@@ -16,21 +20,34 @@ jobs:
       fail-fast: false
       matrix:
         os: [ macos-latest, windows-latest, ubuntu-latest ]
-        features: [ "default", "juce_audio_processors" ]
+        features: [ "default", "juce-8", "juce_audio_processors", "juce-8,juce_audio_processors" ]
         include:
+          - os: macos-latest
+            setup: brew install sccache
+          - os: windows-latest
+            setup: choco install ninja sccache
           - os: ubuntu-latest
             setup: |
               sudo apt update
               sudo apt install \
+                ninja-build sccache \
                 libasound2-dev libjack-jackd2-dev \
                 libfreetype-dev libfontconfig1-dev \
                 libx11-dev libxcomposite-dev libxcursor-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - if: ${{ matrix.setup }}
         run: ${{ matrix.setup }}
+      - name: Cache sccache
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}/.sccache
+          key: sccache-${{ runner.os }}-${{ strategy.job-index }}
       - name: Build
-        run: cargo build --verbose --features "${{ matrix.features }}"
+        run: cargo build -vv --features "${{ matrix.features }}"
       - name: Run tests
         run: cargo test --verbose --features "${{ matrix.features }}"
+      - name: sccache stats
+        if: always()
+        run: sccache --show-stats

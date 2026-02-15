@@ -8,11 +8,12 @@
 namespace juce
 {
 using OwnedArrayPluginDescription = OwnedArray<PluginDescription>;
+void addDefaultFormatsToManager (AudioPluginFormatManager& manager);
 } // namespace juce
 
 namespace cxx_juce
 {
-juce::String audioProcessorGetName(const juce::AudioProcessor& processor) noexcept;
+juce::String audioProcessorGetName (const juce::AudioProcessor& processor) noexcept;
 
 CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE(AudioPluginFormat, juce::AudioPluginFormat)
 CXX_JUCE_DECLARE_BOXED_TRAIT_TYPE(AudioPlugin, juce::AudioPluginInstance)

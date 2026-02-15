@@ -46,6 +46,12 @@ fn main() {
     let mut cmake = cmake::Config::new("bridge");
     cmake.build_target("cxx-juce");
 
+    if cfg!(feature = "juce-8") {
+        cmake.define("CXX_JUCE_VERSION_OF_JUCE", "8");
+    } else {
+        cmake.define("CXX_JUCE_VERSION_OF_JUCE", "7");
+    }
+
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
     cmake.define(
         "CXX_JUCE_BRIDGE_FILES",
@@ -94,6 +100,11 @@ fn main() {
         cmake.profile("RelWithDebInfo");
     }
 
+    if let Ok(launcher) = env::var("CMAKE_CXX_COMPILER_LAUNCHER") {
+        cmake.define("CMAKE_CXX_COMPILER_LAUNCHER", &launcher);
+        cmake.define("CMAKE_C_COMPILER_LAUNCHER", &launcher);
+    }
+
     if cfg!(target_os = "macos") {
         cmake.define("CMAKE_OSX_DEPLOYMENT_TARGET", "12.0");
     }
@@ -105,19 +116,15 @@ fn main() {
     println!("cargo:rerun-if-env-changed=CXX_JUCE_ASIO_SDK_DIR");
     println!("cargo:rerun-if-env-changed=CXX_JUCE_SYSTEM_JUCE_SOURCE");
 
-    if cfg!(target_os = "windows") {
-        println!(
-            "cargo:rustc-link-search=native={}/build/{}",
-            destination.display(),
-            cmake.get_profile()
-        );
-    } else {
-        println!(
-            "cargo:rustc-link-search=native={}/build",
-            destination.display()
-        );
-    };
-
+    println!(
+        "cargo:rustc-link-search=native={}/build",
+        destination.display()
+    );
+    println!(
+        "cargo:rustc-link-search=native={}/build/{}",
+        destination.display(),
+        cmake.get_profile()
+    );
     println!("cargo:rustc-link-lib=static=cxx-juce");
 
     if cfg!(target_os = "macos") {

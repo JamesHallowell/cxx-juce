@@ -9,6 +9,7 @@ documentation = "https://docs.rs/cxx-juce"
 
 [features]
 default = []
+juce-8 = []
 asio = []
 juce_audio_processors = []
 vst3 = ["juce_audio_processors"]
